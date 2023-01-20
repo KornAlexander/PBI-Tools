@@ -1,0 +1,568 @@
+{
+  "name": "Calculationgrouptemplate",
+  "compatibilityLevel": 1550,
+  "model": {
+    "culture": "en-US",
+    "dataAccessOptions": {
+      "legacyRedirects": true,
+      "returnErrorValuesAsNull": true
+    },
+    "defaultPowerBIDataSourceVersion": "powerBI_V3",
+    "discourageImplicitMeasures": true,
+    "sourceQueryCulture": "en-GB",
+    "tables": [
+      {
+        "name": "Time Intelligence",
+        "lineageTag": "9b3cd4ff-8628-4207-826a-e66d39a55adc",
+        "calculationGroup": {
+          "calculationItems": [
+            {
+              "name": "AC",
+              "expression": "SELECTEDMEASURE()"
+            },
+            {
+              "name": "Y-1",
+              "expression": [
+                "CALCULATE (",
+                "    SELECTEDMEASURE(),",
+                "    SAMEPERIODLASTYEAR ( Time[CalendarDate] ),",
+                "    ALL ( Time )",
+                ")",
+                ""
+              ]
+            },
+            {
+              "name": "Y-2",
+              "expression": [
+                "CALCULATE (",
+                "    SELECTEDMEASURE(),",
+                "    DATEADD(Time[CalendarDate],-2,year),",
+                "    ALL ( Time )",
+                ")"
+              ]
+            },
+            {
+              "name": "Y-3",
+              "expression": [
+                "CALCULATE (",
+                "    SELECTEDMEASURE(),",
+                "    DATEADD(Time[CalendarDate],-3,year),",
+                "    ALL ( Time )",
+                ")"
+              ]
+            },
+            {
+              "name": "YTD",
+              "expression": [
+                "CALCULATE(",
+                "    SELECTEDMEASURE(),",
+                "    DATESYTD( Time[CalendarDate], \"12/31\" ),",
+                "    ALL( Time )",
+                ")"
+              ]
+            },
+            {
+              "name": "YTD-1",
+              "expression": [
+                "CALCULATE(",
+                "    SELECTEDMEASURE(),",
+                "    DATEADD( DATESYTD( Time[CalendarDate], \"12/31\" ), -1, YEAR ),",
+                "    ALL( Time )",
+                ")"
+              ]
+            },
+            {
+              "name": "YTD-2",
+              "expression": [
+                "CALCULATE(",
+                "    SELECTEDMEASURE(),",
+                "    DATEADD( DATESYTD( Time[CalendarDate], \"12/31\" ), -2, YEAR ),",
+                "    ALL( Time )",
+                ")"
+              ]
+            },
+            {
+              "name": "FYTD",
+              "expression": [
+                "CALCULATE(",
+                "    SELECTEDMEASURE(),",
+                "    DATESYTD( Time[CalendarDate], \"07/31\" ),",
+                "    ALL( Time )",
+                ")"
+              ]
+            },
+            {
+              "name": "FYTD-1",
+              "expression": [
+                "CALCULATE(",
+                "    SELECTEDMEASURE(),",
+                "    DATEADD( DATESYTD( Time[CalendarDate], \"07/31\" ), -1, YEAR ),",
+                "    ALL( Time )",
+                ")"
+              ]
+            },
+            {
+              "name": "FYTD-2",
+              "expression": [
+                "CALCULATE(",
+                "    SELECTEDMEASURE(),",
+                "    DATEADD( DATESYTD( Time[CalendarDate], \"07/31\" ), -2, YEAR ),",
+                "    ALL( Time )",
+                ")"
+              ]
+            },
+            {
+              "name": "abs. AC vs Y-1",
+              "expression": [
+                "VAR AC =",
+                "    SELECTEDMEASURE()",
+                "VAR Y1 =",
+                "    CALCULATE(",
+                "        SELECTEDMEASURE(),",
+                "        SAMEPERIODLASTYEAR( Time[CalendarDate] ),",
+                "        ALL( Time )",
+                "    )",
+                "RETURN",
+                "    AC - Y1"
+              ]
+            },
+            {
+              "name": "abs. AC vs Y-2",
+              "expression": [
+                "VAR AC =",
+                "    SELECTEDMEASURE()",
+                "VAR Y2 =",
+                "    CALCULATE(",
+                "        SELECTEDMEASURE(),",
+                "        DATEADD( Time[CalendarDate], -2, YEAR ),",
+                "        ALL( Time )",
+                "    )",
+                "RETURN",
+                "    AC - Y2"
+              ]
+            },
+            {
+              "name": "abs. AC vs YTD-1",
+              "expression": [
+                "VAR AC =",
+                "    TOTALYTD(",
+                "        SELECTEDMEASURE(),",
+                "        DATESYTD( Time[CalendarDate], \"12/31\" ),",
+                "        ALL( Time )",
+                "    )",
+                "VAR Y1 =",
+                "    CALCULATE(",
+                "        SELECTEDMEASURE(),",
+                "        DATEADD( DATESYTD( Time[CalendarDate], \"12/31\" ), -1, YEAR ),",
+                "        ALL( Time )",
+                "    )",
+                "RETURN",
+                "    AC - Y1"
+              ]
+            },
+            {
+              "name": "abs. AC vs YTD-2 ",
+              "expression": [
+                "VAR AC =",
+                "    TOTALYTD(",
+                "        SELECTEDMEASURE(),",
+                "        DATESYTD( Time[CalendarDate], \"12/31\" ),",
+                "        ALL( Time )",
+                "    )",
+                "VAR Y2 =",
+                "    CALCULATE(",
+                "        SELECTEDMEASURE(),",
+                "        DATEADD( DATESYTD( Time[CalendarDate], \"12/31\" ), -2, YEAR ),",
+                "        ALL( Time )",
+                "    )",
+                "RETURN",
+                "    AC - Y2"
+              ]
+            },
+            {
+              "name": "abs. AC vs FYTD-1",
+              "expression": [
+                "VAR AC =",
+                "    CALCULATE(",
+                "        SELECTEDMEASURE(),",
+                "        DATESYTD( Time[CalendarDate], \"07/31\" ),",
+                "        ALL( Time )",
+                "    )",
+                "VAR Y1 =",
+                "    CALCULATE(",
+                "        SELECTEDMEASURE(),",
+                "        DATEADD( DATESYTD( Time[CalendarDate], \"07/31\" ), -1, YEAR ),",
+                "        ALL( Time )",
+                "    )",
+                "RETURN",
+                "    AC - Y1"
+              ]
+            },
+            {
+              "name": "abs. AC vs FYTD-2",
+              "expression": [
+                "VAR AC =",
+                "    CALCULATE(",
+                "        SELECTEDMEASURE(),",
+                "        DATESYTD( Time[CalendarDate], \"07/31\" ),",
+                "        ALL( Time )",
+                "    )",
+                "VAR Y2 =",
+                "    CALCULATE(",
+                "        SELECTEDMEASURE(),",
+                "        DATEADD( DATESYTD( Time[CalendarDate], \"07/31\" ), -2, YEAR ),",
+                "        ALL( Time )",
+                "    )",
+                "RETURN",
+                "    AC - Y2"
+              ]
+            },
+            {
+              "name": "AC vs Y-1",
+              "expression": [
+                "VAR AC =",
+                "TOTALYTD(",
+                "    SELECTEDMEASURE(),",
+                "    DATESYTD( Time[CalendarDate], \"12/31\" ),",
+                "    ALL( Time )",
+                ")",
+                "VAR Y1 =",
+                "    CALCULATE(",
+                "        SELECTEDMEASURE(),",
+                "        SAMEPERIODLASTYEAR( Time[CalendarDate] ),",
+                "        ALL( Time )",
+                "    )",
+                "RETURN",
+                "    DIVIDE( AC - Y1, Y1 )"
+              ]
+            },
+            {
+              "name": "AC vs Y-2",
+              "expression": [
+                "VAR AC =",
+                "TOTALYTD(",
+                "    SELECTEDMEASURE(),",
+                "    DATESYTD( Time[CalendarDate], \"12/31\" ),",
+                "    ALL( Time )",
+                ")",
+                "VAR Y2 =",
+                "    CALCULATE(",
+                "        SELECTEDMEASURE(),",
+                "        DATEADD( Time[CalendarDate], -2, YEAR ),",
+                "        ALL( Time )",
+                "    )",
+                "RETURN",
+                "    DIVIDE( AC - Y2, Y2 )"
+              ]
+            },
+            {
+              "name": "AC vs YTD-1",
+              "expression": [
+                "VAR AC =",
+                "    TOTALYTD(",
+                "        SELECTEDMEASURE(),",
+                "        DATESYTD( Time[CalendarDate], \"12/31\" ),",
+                "        ALL( Time )",
+                "    )",
+                "VAR Y1 =",
+                "    CALCULATE(",
+                "        SELECTEDMEASURE(),",
+                "        DATEADD( DATESYTD( Time[CalendarDate], \"12/31\" ), -1, YEAR ),",
+                "        ALL( Time )",
+                "    )",
+                "RETURN",
+                "    DIVIDE( AC - Y1, Y1 )"
+              ]
+            },
+            {
+              "name": "AC vs YTD-2",
+              "expression": [
+                "VAR AC =",
+                "    TOTALYTD(",
+                "        SELECTEDMEASURE(),",
+                "        DATESYTD( Time[CalendarDate], \"12/31\" ),",
+                "        ALL( Time )",
+                "    )",
+                "VAR Y2 =",
+                "    CALCULATE(",
+                "        SELECTEDMEASURE(),",
+                "        DATEADD( DATESYTD( Time[CalendarDate], \"12/31\" ), -2, YEAR ),",
+                "        ALL( Time )",
+                "    )",
+                "RETURN",
+                "    DIVIDE( AC - Y2, Y2 )"
+              ]
+            },
+            {
+              "name": "AC vs FYTD-1",
+              "expression": [
+                "VAR AC =",
+                "    CALCULATE(",
+                "        SELECTEDMEASURE(),",
+                "        DATESYTD( Time[CalendarDate], \"07/31\" ),",
+                "        ALL( Time )",
+                "    )",
+                "VAR Y1 =",
+                "    CALCULATE(",
+                "        SELECTEDMEASURE(),",
+                "        DATEADD( DATESYTD( Time[CalendarDate], \"07/31\" ), -1, YEAR ),",
+                "        ALL( Time )",
+                "    )",
+                "RETURN",
+                "    DIVIDE( AC - Y1, Y1 )"
+              ]
+            },
+            {
+              "name": "AC vs FYTD-2",
+              "expression": [
+                "VAR AC =",
+                "    CALCULATE(",
+                "        SELECTEDMEASURE(),",
+                "        DATESYTD( Time[CalendarDate], \"07/31\" ),",
+                "        ALL( Time )",
+                "    )",
+                "VAR Y2 =",
+                "    CALCULATE(",
+                "        SELECTEDMEASURE(),",
+                "        DATEADD( DATESYTD( Time[CalendarDate], \"07/31\" ), -2, YEAR ),",
+                "        ALL( Time )",
+                "    )",
+                "RETURN",
+                "    DIVIDE( AC - Y2, Y2 )"
+              ]
+            },
+            {
+              "name": "achiev. AC vs Y-1",
+              "expression": [
+                "VAR AC =",
+                "    SELECTEDMEASURE()",
+                "VAR Y1 =",
+                "    CALCULATE(",
+                "        SELECTEDMEASURE(),",
+                "        SAMEPERIODLASTYEAR( Time[CalendarDate] ),",
+                "        ALL( Time )",
+                "    )",
+                "RETURN",
+                "    1",
+                "        - (",
+                "            (",
+                "                IFERROR( ( Y1 - AC ), 0 ) / Y1",
+                "            )",
+                "        )"
+              ]
+            },
+            {
+              "name": "achiev. AC vs Y-2",
+              "expression": [
+                "VAR AC =",
+                "    SELECTEDMEASURE()",
+                "VAR Y2 =",
+                "CALCULATE (",
+                "    SELECTEDMEASURE(),",
+                "    DATEADD(Time[CalendarDate],-2,year),",
+                "    ALL ( Time )",
+                ")",
+                "    ",
+                "RETURN",
+                "    1",
+                "        - (",
+                "            (",
+                "                IFERROR( ( Y2 - AC ), 0 ) / Y2",
+                "            )",
+                "        )",
+                "        ",
+                "        ",
+                "",
+                ""
+              ]
+            },
+            {
+              "name": "achiev. AC vs YTD-1",
+              "expression": [
+                "VAR AC =",
+                "    TOTALYTD(",
+                "        SELECTEDMEASURE(),",
+                "        DATESYTD( Time[CalendarDate], \"12/31\" ),",
+                "        ALL( Time )",
+                "    )",
+                "VAR Y1 =",
+                "    CALCULATE(",
+                "        SELECTEDMEASURE(),",
+                "        DATEADD( DATESYTD( Time[CalendarDate], \"12/31\" ), -1, YEAR ),",
+                "        ALL( Time )",
+                "    )",
+                "RETURN",
+                "    1",
+                "        - (",
+                "            (",
+                "                IFERROR( ( Y1 - AC ), 0 ) / Y1",
+                "            )",
+                "        )"
+              ]
+            },
+            {
+              "name": "achiev. AC vs YTD-2",
+              "expression": [
+                "VAR AC =",
+                "    TOTALYTD(",
+                "        SELECTEDMEASURE(),",
+                "        DATESYTD( Time[CalendarDate], \"12/31\" ),",
+                "        ALL( Time )",
+                "    )",
+                "VAR Y2 =",
+                "    CALCULATE(",
+                "        SELECTEDMEASURE(),",
+                "        DATEADD( DATESYTD( Time[CalendarDate], \"12/31\" ), -2, YEAR ),",
+                "        ALL( Time )",
+                "    )",
+                "RETURN",
+                "    1",
+                "        - (",
+                "            (",
+                "                IFERROR( ( Y2 - AC ), 0 ) / Y2",
+                "            )",
+                "        )"
+              ]
+            },
+            {
+              "name": "achiev. AC vs FYTD-1",
+              "expression": [
+                "VAR AC =",
+                "    CALCULATE(",
+                "        SELECTEDMEASURE(),",
+                "        DATESYTD( Time[CalendarDate], \"07/31\" ),",
+                "        ALL( Time )",
+                "    )",
+                "VAR Y1 =",
+                "    CALCULATE(",
+                "        SELECTEDMEASURE(),",
+                "        DATEADD( DATESYTD( Time[CalendarDate], \"07/31\" ), -1, YEAR ),",
+                "        ALL( Time )",
+                "    )",
+                "RETURN",
+                "    1",
+                "        - (",
+                "            (",
+                "                IFERROR( ( Y1 - AC ), 0 ) / Y1",
+                "            )",
+                "        )"
+              ]
+            },
+            {
+              "name": "achiev. AC vs FYTD-2",
+              "expression": [
+                "VAR AC =",
+                "    CALCULATE(",
+                "        SELECTEDMEASURE(),",
+                "        DATESYTD( Time[CalendarDate], \"07/31\" ),",
+                "        ALL( Time )",
+                "    )",
+                "VAR Y2 =",
+                "    CALCULATE(",
+                "        SELECTEDMEASURE(),",
+                "        DATEADD( DATESYTD( Time[CalendarDate], \"07/31\" ), -2, YEAR ),",
+                "        ALL( Time )",
+                "    )",
+                "RETURN",
+                "    1",
+                "        - (",
+                "            (",
+                "                IFERROR( ( Y2 - AC ), 0 ) / Y2",
+                "            )",
+                "        )"
+              ]
+            }
+          ]
+        },
+        "columns": [
+          {
+            "name": "Time Intelligence",
+            "dataType": "string",
+            "sourceColumn": "Name",
+            "sortByColumn": "Ordinal",
+            "lineageTag": "38bb56a5-78d7-4331-9b17-006dea6482a3"
+          },
+          {
+            "name": "Ordinal",
+            "dataType": "int64",
+            "isHidden": true,
+            "sourceColumn": "Ordinal",
+            "lineageTag": "6bd765f5-532e-4010-8f50-87deec01775a"
+          }
+        ],
+        "partitions": [
+          {
+            "name": "Partition",
+            "mode": "import",
+            "source": {
+              "type": "calculationGroup"
+            }
+          }
+        ]
+      },
+      {
+        "name": "Time",
+        "lineageTag": "7b1ca335-fbe1-4633-849c-132262e5344e",
+        "partitions": [
+          {
+            "name": "New Calculated Table",
+            "mode": "import",
+            "source": {
+              "type": "calculated",
+              "expression": [
+                "ADDCOLUMNS (",
+                "CALENDAR(Date(2019, 1, 1), Date(2024, 1, 1)),",
+                "\"IsCurrentMonth\", AND(YEAR(TODAY())=YEAR([Date]),MONTH(TODAY())=MONTH([Date])),",
+                "\"CalendarDateinInteger\", FORMAT ( [Date], \"YYYYMMDD\" ),",
+                "\"CalendarDate\", [Date]",
+                "\"Year\", YEAR ( [Date] ),",
+                "\"Monthnumber\", FORMAT ( [Date], \"MM\" ),",
+                "\"YearMonthnumber\", FORMAT ( [Date], \"YYYY/MM\" ),",
+                "\"YearMonthShort\", FORMAT ( [Date], \"YYYY/mmm\" ),",
+                "\"MonthNameShort\", FORMAT ( [Date], \"mmm\" ),",
+                "\"MonthNameLong\", FORMAT ( [Date], \"mmmm\" ),",
+                "\"DayOfWeekNumber\", WEEKDAY ( [Date] ),",
+                "\"DayOfWeek\", FORMAT ( [Date], \"dddd\" ),",
+                "\"DayOfWeekShort\", FORMAT ( [Date], \"ddd\" ),",
+                "\"Quarter\", \"Q\" & FORMAT ( [Date], \"Q\" ),",
+                "\"YearQuarter\", FORMAT ( [Date], \"YYYY\" ) & \"/Q\"",
+                "& FORMAT ( [Date], \"Q\" )",
+                ")"
+              ]
+            }
+          }
+        ]
+      }
+    ],
+    "cultures": [
+      {
+        "name": "en-US",
+        "linguisticMetadata": {
+          "content": {
+            "Version": "1.0.0",
+            "Language": "en-US",
+            "DynamicImprovement": "HighConfidence"
+          },
+          "contentType": "json"
+        }
+      }
+    ],
+    "annotations": [
+      {
+        "name": "PBIDesktopVersion",
+        "value": "2.100.1381.0 (21.12)"
+      },
+      {
+        "name": "PBI_QueryOrder"
+      },
+      {
+        "name": "__PBI_TimeIntelligenceEnabled",
+        "value": "1"
+      },
+      {
+        "name": "TabularEditor_SerializeOptions",
+        "value": "{\"IgnoreInferredObjects\":true,\"IgnoreInferredProperties\":true,\"IgnoreTimestamps\":true,\"SplitMultilineStrings\":true,\"PrefixFilenames\":false,\"LocalTranslations\":false,\"LocalPerspectives\":false,\"LocalRelationships\":false,\"Levels\":[\"Data Sources\",\"Perspectives\",\"Relationships\",\"Roles\",\"Tables\",\"Tables/Columns\",\"Tables/Hierarchies\",\"Tables/Measures\",\"Tables/Partitions\",\"Tables/Calculation Items\",\"Translations\"]}"
+      }
+    ]
+  }
+}
