@@ -59,11 +59,18 @@ $Folder = [Microsoft.VisualBasic.Interaction]::InputBox($msg, $title, $Folder)
 $ResultFileName = (Get-Date).ToString("yyMMdd") + $env:USERNAME + "Result.zip" 
 [void][Reflection.Assembly]::LoadWithPartialName('Microsoft.VisualBasic')
 $title = 'Name Zip File'
-$msg   = 'This will be the name of the Zip File'
+$msg   = 'This will be the name of the zip file'
 $ResultFileName = [Microsoft.VisualBasic.Interaction]::InputBox($msg, $title, $ResultFileName)
 
+[void][Reflection.Assembly]::LoadWithPartialName('Microsoft.VisualBasic')
+$title = 'Time of Error'
+$msg   = 'Please provide one or multiple precise timestamp(s) when you experienced the error. 
+
+Just enter the date and time as text.'
+$ErrorTime = [Microsoft.VisualBasic.Interaction]::InputBox($msg, $title, "Unknown")
+
 #-------- Checking if a variable is empty and aborting the process if so ------------
-if ([string]::IsNullOrEmpty($ResultFileName) -or [string]::IsNullOrEmpty($Folder) -or [string]::IsNullOrEmpty($PBIRSInstallationPath) -or [string]::IsNullOrEmpty($ReportserverDB) -or [string]::IsNullOrEmpty($serverInstancename)) {
+if ([string]::IsNullOrEmpty($ResultFileName) -or [string]::IsNullOrEmpty($Folder) -or [string]::IsNullOrEmpty($PBIRSInstallationPath) -or [string]::IsNullOrEmpty($ReportserverDB) -or [string]::IsNullOrEmpty($serverInstancename) -or [string]::IsNullOrEmpty($ErrorTime)) {
     Write-Host "One or more required variables are empty. Aborting process." -ForegroundColor Red
     exit 1
 }
@@ -73,6 +80,7 @@ if ([string]::IsNullOrEmpty($ResultFileName) -or [string]::IsNullOrEmpty($Folder
 $FolderLogs = Join-Path -Path $Folder "\Logs"
 $PowerBILogs = $PBIRSInstallationPath + "PBIRS\LogFiles"
 $RSreportserverConfigFile = $PBIRSInstallationPath + "PBIRS\ReportServer\RSreportserver.config"
+
 
 
 #-------- SQL Command Subscription and Schedule Refresh ----------
@@ -163,6 +171,9 @@ Write-Host "
 New Folder created $FolderLogs
 "
 
+#--------- Save Timestamp ----------------------------------------
+$ErrorTime | Out-File -FilePath "$Folder\Timestamp.txt" -NoNewline -Encoding ASCII
+Write-Host "Successfully Timestamp in txt file saved"
 
 #--------- Logfiles ----------------------------------------
 # Get all .log files in the source folder
