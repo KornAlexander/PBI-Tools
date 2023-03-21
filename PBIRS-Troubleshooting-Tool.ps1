@@ -155,6 +155,9 @@ $sqlcmdExecutionLog3 = "select * from executionlog3"
 #--------- SQL Command for Event table -----------
 $sqlcmdEvent = "select * from Event"
 
+#--------- SQL Command for Configuration Info -----------
+$sqlcmdConfigurationInfo = "SELECT * FROM [dbo].[ConfigurationInfo]"
+
 
 #--------- Install Prereq SQL Module -------------
 #install module
@@ -199,10 +202,13 @@ Invoke-Sqlcmd -ServerInstance $serverInstancename -Database $ReportserverDB -Que
 Invoke-Sqlcmd -ServerInstance $serverInstancename -Database $ReportserverDB -Query $sqlcmdSubscriptionScheduleRefreshHistory | Export-Csv -NoTypeInformation "$Folder\SubscriptionScheduleRefreshHistory.csv" -Force
 Invoke-Sqlcmd -ServerInstance $serverInstancename -Database $ReportserverDB -Query $sqlcmdExecutionLog3 | Export-Csv -NoTypeInformation "$Folder\ExecutionLog3.csv" -Force
 Invoke-Sqlcmd -ServerInstance $serverInstancename -Database $ReportserverDB -Query $sqlcmdEvent  | Export-Csv -NoTypeInformation "$folder\Eventtable.csv" -Force
+Invoke-Sqlcmd -ServerInstance $serverInstancename -Database $ReportserverDB -Query $sqlcmdConfigurationInfo  | Export-Csv -NoTypeInformation "$folder\ConfigurationInfo.csv" -Force
+
 
 Write-Host "Collection of Data from Report Server Database"
 Write-Host "Successfully collected ExecutionLog3 table"
 Write-Host "Successfully collected Event table"
+Write-Host "Successfully collected ConfigurationInfo table"
 Write-Host "Successfully collected Subscription and Schedule Refresh Last Status"
 Write-Host "Successfully collected Subscription and Schedule Refresh History
 "
