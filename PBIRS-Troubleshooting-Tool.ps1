@@ -16,18 +16,25 @@ business interruption, loss of business information, or other pecuniary loss) ar
 sample scripts or documentation, even if Microsoft has been advised of the possibility of such damages. 
 #>
 
+
 #-------- Disclaimer to Start Process ------------
-$result = [System.Windows.Forms.MessageBox]::Show(
-"Please be informed that this script collects and zips data from various report server database tables, the rsreportserver.config and all '.log' files. 
+Add-Type -AssemblyName Microsoft.VisualBasic
+[void][Reflection.Assembly]::LoadWithPartialName('Microsoft.VisualBasic')
+$title = 'Info'
+$message = 'Please be informed that this script collects and zips data from various report server database tables, the rsreportserver.config and all ".log" files. 
 
 The script just zips all files to a destination you determine in a following step. The files will not automatically be shared with anyone but yourself. 
 
 We advice that you review the created files before sharing with anyone. 
 
-Do you would like to proceed?", "Consent", "YesNo", "Information")
-
-if ($result -eq "No") {
-    Write-Host "Execution aborted by user." -ForegroundColor Red
+Do you would like to proceed?'
+$confirm = [Microsoft.VisualBasic.Interaction]::MsgBox(
+    $message,
+    [Microsoft.VisualBasic.MsgBoxStyle]::Information + [Microsoft.VisualBasic.MsgBoxStyle]::YesNo,
+    $title
+)
+if ($confirm -eq 'No') {
+    Write-Host 'Execution aborted by user.' -ForegroundColor Red
     exit
 }
 
@@ -80,7 +87,6 @@ if ([string]::IsNullOrEmpty($ResultFileName) -or [string]::IsNullOrEmpty($Folder
 $FolderLogs = Join-Path -Path $Folder "\Logs"
 $PowerBILogs = $PBIRSInstallationPath + "PBIRS\LogFiles"
 $RSreportserverConfigFile = $PBIRSInstallationPath + "PBIRS\ReportServer\RSreportserver.config"
-
 
 
 #-------- SQL Command Subscription and Schedule Refresh ----------
@@ -204,7 +210,6 @@ Invoke-Sqlcmd -ServerInstance $serverInstancename -Database $ReportserverDB -Que
 Invoke-Sqlcmd -ServerInstance $serverInstancename -Database $ReportserverDB -Query $sqlcmdEvent  | Export-Csv -NoTypeInformation "$folder\Eventtable.csv" -Force
 Invoke-Sqlcmd -ServerInstance $serverInstancename -Database $ReportserverDB -Query $sqlcmdConfigurationInfo  | Export-Csv -NoTypeInformation "$folder\ConfigurationInfo.csv" -Force
 
-
 Write-Host "Collection of Data from Report Server Database"
 Write-Host "Successfully collected ExecutionLog3 table"
 Write-Host "Successfully collected Event table"
@@ -228,4 +233,4 @@ Write-Host "Successfully deleted non-zipped files"
 
 
 #---------- Finished Message Box -------------------------------
-[System.Windows.Forms.MessageBox]::Show("Please check the successful completion in $Folder", "Script Completed", "OKCancel", "Information")
+[System.Windows.Forms.MessageBox]::Show("Please check the successful completion in $Folder", "Script Completed", "OK", "Information")
