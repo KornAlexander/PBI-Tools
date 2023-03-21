@@ -17,9 +17,14 @@ sample scripts or documentation, even if Microsoft has been advised of the possi
 #>
 
 #-------- Disclaimer to Start Process ------------
+$result = [System.Windows.Forms.MessageBox]::Show(
+"Please be informed that this script collects and zips data from various report server database tables, the rsreportserver.config and all '.log' files. 
 
+The script just zips all files to a destination you determine in a following step. The files will not automatically be shared with anyone but yourself. 
 
-$result = [System.Windows.Forms.MessageBox]::Show("Please be informed that this script collects and zips data from various report server database tables, the rsreportserver.config and all '.log' files. The script just zips all files to a destination you determine in a following step. Do you consent?", "Consent", "YesNo", "Information")
+We advice that you review the created files before sharing with anyone. 
+
+Do you would like to proceed?", "Consent", "YesNo", "Information")
 
 if ($result -eq "No") {
     Write-Host "Execution aborted by user." -ForegroundColor Red
@@ -27,7 +32,7 @@ if ($result -eq "No") {
 }
 
 
-#-------- Input Varibles ------------
+#-------- Determining Input Varibles Through PopUp Message Boxes ------------ 
 Add-Type -AssemblyName Microsoft.VisualBasic
 [void][Reflection.Assembly]::LoadWithPartialName('Microsoft.VisualBasic')
 $title = 'Instancename'
@@ -57,29 +62,25 @@ $title = 'Name Zip File'
 $msg   = 'This will be the name of the Zip File'
 $ResultFileName = [Microsoft.VisualBasic.Interaction]::InputBox($msg, $title, $ResultFileName)
 
-#--------Checking if a variable is empty and aborting the process if so------------
+#-------- Checking if a variable is empty and aborting the process if so ------------
 if ([string]::IsNullOrEmpty($ResultFileName) -or [string]::IsNullOrEmpty($Folder) -or [string]::IsNullOrEmpty($PBIRSInstallationPath) -or [string]::IsNullOrEmpty($ReportserverDB) -or [string]::IsNullOrEmpty($serverInstancename)) {
     Write-Host "One or more required variables are empty. Aborting process." -ForegroundColor Red
     exit 1
 }
 
-#--------Other variables------------
+
+#-------- Other variables ------------
 $FolderLogs = Join-Path -Path $Folder "\Logs"
 $PowerBILogs = $PBIRSInstallationPath + "PBIRS\LogFiles"
 $RSreportserverConfigFile = $PBIRSInstallationPath + "PBIRS\ReportServer\RSreportserver.config"
 
-#----------------------------------
 
-
-
-
-#-------- SQL Command Subscription and Schedule Refresh----------
+#-------- SQL Command Subscription and Schedule Refresh ----------
 $RenderFormatValue1 = '(//ParameterValue/Value[../Name="RenderFormat"])[1]'
 $RenderFormatValue2 = '(//ParameterValue/Value[../Name="RENDER_FORMAT"])[1]'
 $RenderFormatExpression = 'ISNULL(Convert(XML,sub.[ExtensionSettings]).value(' + "'$RenderFormatValue1', 'nvarchar(50)'), Convert(XML,sub.[ExtensionSettings]).value('$RenderFormatValue2', 'nvarchar(50)')) AS RenderFormat"
 $SubjectValue = '(//ParameterValue/Value[../Name="Subject"])[1]'
 $SubjectExpression = "Convert(XML,sub.[ExtensionSettings]).value('$SubjectValue', 'nvarchar(150)') AS [Subject]"
-
 
 $sqlcmdSubscriptionScheduleRefresh = 
 @"
@@ -128,7 +129,6 @@ INNER JOIN dbo.Subscriptions sub WITH (NOLOCK) ON rs.SubscriptionID = sub.Subscr
 INNER JOIN dbo.Users u WITH (NOLOCK) ON sub.OwnerID = u.UserID
 "@
 
-#-------------------------------
 
 #-------- SQL Command for Subscription History ----------
 $sqlcmdSubscriptionScheduleRefreshHistory =
@@ -139,25 +139,32 @@ from dbo.SubscriptionHistory
 Order By MinuteDiff desc 
 "
 
+
 #--------- SQL Command for ExecutionLog3 ---------
 $sqlcmdExecutionLog3 = "select * from executionlog3"
-#-------------------------------
+
 
 #--------- SQL Command for Event table -----------
 $sqlcmdEvent = "select * from Event"
-#-------------------------------------------------
 
 
+#--------- Install Prereq SQL Module -------------
 #install module
 Install-Module -Name SqlServer -AllowClobber -Scope CurrentUser
 
+
+#--------- Create Destination Folder and Subfolder -------
 New-Item -ItemType Directory -Path  $Folder -Force
-Write-Host "New Folder created $Folder"
+Write-Host "
+New Folder created $Folder"
 
 New-Item -ItemType Directory -Path  $FolderLogs -Force
-Write-Host "New Folder created $FolderLogs"
+Write-Host "
+New Folder created $FolderLogs
+"
 
-#-------------------------------Logfiles--------------------
+
+#--------- Logfiles ----------------------------------------
 # Get all .log files in the source folder
 $files = Get-ChildItem $PowerBILogs -Filter *.log -File
 
@@ -167,34 +174,41 @@ foreach ($file in $files) {
 
     Copy-Item $file.FullName $destinationFile
 }
-#-----------------------------------------------------------
 
-#-------------------------------RSreportserver.config--------------------
 
+#--------- RSreportserver.config ---------------------------
   Copy-Item $RSreportserverConfigFile $FolderLogs -Force
-#-----------------------------------------------------------
+  Write-Host "Successfully collected the RSreportserver.config file
+  "
 
-Write-Host "Exporting ReportServer Database Information"
+
+#---------- Getting Database tables -------------------------------
 #execute SQL commands to collect data
 Invoke-Sqlcmd -ServerInstance $serverInstancename -Database $ReportserverDB -Query $sqlcmdSubscriptionScheduleRefresh | Export-Csv -NoTypeInformation "$Folder\SubscriptionScheduleRefresh.csv" -Force
 Invoke-Sqlcmd -ServerInstance $serverInstancename -Database $ReportserverDB -Query $sqlcmdSubscriptionScheduleRefreshHistory | Export-Csv -NoTypeInformation "$Folder\SubscriptionScheduleRefreshHistory.csv" -Force
 Invoke-Sqlcmd -ServerInstance $serverInstancename -Database $ReportserverDB -Query $sqlcmdExecutionLog3 | Export-Csv -NoTypeInformation "$Folder\ExecutionLog3.csv" -Force
 Invoke-Sqlcmd -ServerInstance $serverInstancename -Database $ReportserverDB -Query $sqlcmdEvent  | Export-Csv -NoTypeInformation "$folder\Eventtable.csv" -Force
 
-Write-Host "Successfully collected the ReportServer SQL Database info"
+Write-Host "Collection of Data from Report Server Database"
+Write-Host "Successfully collected ExecutionLog3 table"
+Write-Host "Successfully collected Event table"
+Write-Host "Successfully collected Subscription and Schedule Refresh Last Status"
+Write-Host "Successfully collected Subscription and Schedule Refresh History
+"
 
-#Compress-Archive -Path $Folder -Destination $Folder
 
+#---------- Zipping all Files -------------------------------
 $zipFile = Join-Path -Path $Folder $ResultFileName
 Compress-Archive -Path $Folder -DestinationPath $zipFile -force
 
 Write-Host "Successfully zipped the collected files"
 
+
+#---------- Removing non zipped Files -------------------------------
 Get-ChildItem $Folder | Where-Object { $_.Extension -ne '.zip' } | Remove-Item -Recurse -Force
 
 Write-Host "Successfully deleted non-zipped files"
 
-[System.Windows.Forms.MessageBox]::Show("Please check the successful completion in $Folder", "Script Completed", "OKCancel", "Information")
 
-#Add-Type -AssemblyName System.Windows.Forms [System.Windows.Forms.MessageBox]::Show("The file has been saved $Folder")
- 
+#---------- Finished Message Box -------------------------------
+[System.Windows.Forms.MessageBox]::Show("Please check the successful completion in $Folder", "Script Completed", "OKCancel", "Information")
