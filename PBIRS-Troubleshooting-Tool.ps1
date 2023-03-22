@@ -76,6 +76,13 @@ $msg   = 'Please provide one or multiple precise timestamp(s) when you experienc
 Just enter the date and time as text.'
 $ErrorTime = [Microsoft.VisualBasic.Interaction]::InputBox($msg, $title, "Unknown")
 
+[void][Reflection.Assembly]::LoadWithPartialName('Microsoft.VisualBasic')
+$title = 'Report with Error'
+$msg   = 'Please provide one or multiple report names you are having issues with. 
+
+If you have issues with all reports please leave ALL'
+$ImpactedReport = [Microsoft.VisualBasic.Interaction]::InputBox($msg, $title, "All")
+
 #-------- Checking if a variable is empty and aborting the process if so ------------
 if ([string]::IsNullOrEmpty($ResultFileName) -or [string]::IsNullOrEmpty($Folder) -or [string]::IsNullOrEmpty($PBIRSInstallationPath) -or [string]::IsNullOrEmpty($ReportserverDB) -or [string]::IsNullOrEmpty($serverInstancename) -or [string]::IsNullOrEmpty($ErrorTime)) {
     Write-Host "One or more required variables are empty. Aborting process." -ForegroundColor Red
@@ -183,6 +190,10 @@ New Folder created $FolderLogs
 #--------- Save Timestamp ----------------------------------------
 $ErrorTime | Out-File -FilePath "$Folder\Timestamp.txt" -NoNewline -Encoding ASCII
 Write-Host "Successfully Timestamp in txt file saved"
+
+#--------- Save ReportName ----------------------------------------
+$ImpactedReport | Out-File -FilePath "$Folder\ImpactedReportName.txt" -NoNewline -Encoding ASCII
+Write-Host "Successfully ImpactedReport in txt file saved"
 
 #--------- Logfiles ----------------------------------------
 # Get all .log files in the source folder
