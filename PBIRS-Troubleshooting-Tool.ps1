@@ -231,6 +231,14 @@ Get-ChildItem $Folder | Where-Object { $_.Extension -ne '.zip' } | Remove-Item -
 
 Write-Host "Successfully deleted non-zipped files"
 
-
 #---------- Finished Message Box -------------------------------
 [System.Windows.Forms.MessageBox]::Show("Please check the successful completion in $Folder", "Script Completed", "OK", "Information")
+
+#---------- Opening Folder Path with file -------------------------------
+if(Test-Path $Folder) {
+    Invoke-Item $Folder
+}
+else {
+    Write-Host "Folder not found at specified location."
+}
+
