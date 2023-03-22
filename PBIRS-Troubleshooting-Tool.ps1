@@ -21,11 +21,18 @@ sample scripts or documentation, even if Microsoft has been advised of the possi
 Add-Type -AssemblyName Microsoft.VisualBasic
 [void][Reflection.Assembly]::LoadWithPartialName('Microsoft.VisualBasic')
 $title = 'Info'
-$message = 'Please be informed that this script collects and zips data from various report server database tables, the rsreportserver.config and all ".log" files. 
+$message = 'Description: 
+Please be informed that this "Power BI Report Server Data Collection" script is designed to collect information that will help Microsoft Customer Support Services (CSS) troubleshoot an issue you may be experiencing with your report server.
+The script zips data from various sources to a destination you determine in a following step. The files will not automatically be shared with anyone but yourself. 
 
-The script just zips all files to a destination you determine in a following step. The files will not automatically be shared with anyone but yourself. 
+Scope: included but not limited
+- various report server database tables
+- rsreportserver.config
+- all ".log" files.
 
-We advice that you review the created files before sharing with anyone. 
+Disclaimer: Review the created files
+The collected data may contain Personally Identifiable Information (PII) and/or sensitive data, such as usernames.
+Therefore we advice that you review the created files before sharing it with anyone. 
 
 Do you would like to proceed?'
 $confirm = [Microsoft.VisualBasic.Interaction]::MsgBox(
