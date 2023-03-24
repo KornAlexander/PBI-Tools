@@ -45,6 +45,62 @@ if ($confirm -eq 'No') {
     exit
 }
 
+#-------- Names for selection Options ------------ 
+$SelectionOption1 = "RS configuration info"
+$SelectionOption2 = "RS logs"
+$SelectionOption3 = "ExecutionLog3"
+$SelectionOption4 = "Performance / subscription / schedule refresh"
+$SelectionOption5 = "System and application log"
+
+#-------- PopUp to determine which data will be collected ------------ 
+Add-Type -AssemblyName System.Windows.Forms
+$title = 'Topic Selector'
+$msg   = 
+$options = @($SelectionOption1,$SelectionOption2, $SelectionOption3, $SelectionOption4, $SelectionOption5)
+$checkedListBox = New-Object System.Windows.Forms.CheckedListBox
+$checkedListBox.Items.AddRange($options)
+$checkedListBox.CheckOnClick = $true # set CheckOnClick property to true
+$checkedListBox.Top = 20 # adjust position from the top
+$checkedListBox.Left = 20 # adjust position to the right
+$checkedListBox.Width = 250
+$form = New-Object System.Windows.Forms.Form
+$form.StartPosition = 'CenterScreen' # set StartPosition property to CenterScreen
+$form.Text = $title
+$form.Width = 300
+$form.Height = 200 # increase height to avoid overlapping
+$form.Controls.Add($checkedListBox)
+$label = New-Object System.Windows.Forms.Label
+$label.Text = 'Select the topics you want to collect:'
+$label.Left = 20 # adjust position to the right
+$label.Width = 250
+$form.Controls.Add($label)
+$okButton = New-Object System.Windows.Forms.Button
+$okButton.Text = 'OK'
+$okButton.DialogResult = [System.Windows.Forms.DialogResult]::OK
+$okButton.Left = 150 - $okButton.Width / 2
+$okButton.Top = 120 # increase top position to avoid overlapping
+$form.AcceptButton = $okButton
+$form.Controls.Add($okButton)
+
+# set the first four checkboxes to be checked by default
+for ($i = 0; $i -lt 4; $i++) {
+    $checkedListBox.SetItemChecked($i, $true)
+}
+
+$result = $form.ShowDialog()
+$SelectedOption = @{}
+if ($result -eq [System.Windows.Forms.DialogResult]::OK) {
+    foreach ($option in $options) {
+        $SelectedOption[$option] = $checkedListBox.CheckedItems.Contains($option)
+    }
+}
+
+Write-Host $SelectionOption1": $($SelectedOption[$SelectionOption1])"
+Write-Host $SelectionOption2": $($SelectedOption[$SelectionOption2])"
+Write-Host $SelectionOption3": $($SelectedOption[$SelectionOption3])"
+Write-Host $SelectionOption4": $($SelectedOption[$SelectionOption4])"
+Write-Host $SelectionOption5": $($SelectedOption[$SelectionOption5])"
+
 
 #-------- Determining Input Varibles Through PopUp Message Boxes ------------ 
 Add-Type -AssemblyName Microsoft.VisualBasic
@@ -76,6 +132,26 @@ $title = 'Name Zip File'
 $msg   = 'This will be the name of the zip file'
 $ResultFileName = [Microsoft.VisualBasic.Interaction]::InputBox($msg, $title, $ResultFileName)
 
+if ($SelectedOption[$SelectionOption5]) {
+$startDate = (Get-Date).AddDays(-1)
+[void][Reflection.Assembly]::LoadWithPartialName('Microsoft.VisualBasic')
+$title = 'Start of Event Log'
+$msg   = 'This will be the starting day the application and system log will be collected from. 
+
+If you had the issue earlier please modify'
+$startDate = [Microsoft.VisualBasic.Interaction]::InputBox($msg, $title, $startDate)
+}
+
+if ($SelectedOption[$SelectionOption5]) {
+$endDate = Get-Date
+[void][Reflection.Assembly]::LoadWithPartialName('Microsoft.VisualBasic')
+$title = 'End of Event Log'
+$msg   = 'The application and system log will be collected till today. 
+
+To limit the data selection feel free to modify the collection to end at an earlier day.'
+$endDate = [Microsoft.VisualBasic.Interaction]::InputBox($msg, $title, $endDate)
+}
+
 [void][Reflection.Assembly]::LoadWithPartialName('Microsoft.VisualBasic')
 $title = 'Time of Error'
 $msg   = 'Please provide one or multiple precise timestamp(s) when you experienced the error. 
@@ -101,6 +177,8 @@ if ([string]::IsNullOrEmpty($ResultFileName) -or [string]::IsNullOrEmpty($Folder
 $FolderLogs = Join-Path -Path $Folder "\Logs"
 $PowerBILogs = $PBIRSInstallationPath + "PBIRS\LogFiles"
 $RSreportserverConfigFile = $PBIRSInstallationPath + "PBIRS\ReportServer\RSreportserver.config"
+$ApplicationLogFile = $Folder+"\ApplicationLog.csv"
+$SystemLogFile = $Folder+"\SystemLog.csv"
 
 
 #-------- SQL Command Subscription and Schedule Refresh ----------
@@ -189,10 +267,12 @@ New-Item -ItemType Directory -Path  $Folder -Force
 Write-Host "
 New Folder created $Folder"
 
+if ($SelectedOption[$SelectionOption2]) {
 New-Item -ItemType Directory -Path  $FolderLogs -Force
 Write-Host "
 New Folder created $FolderLogs
 "
+}
 
 #--------- Save Timestamp ----------------------------------------
 $ErrorTime | Out-File -FilePath "$Folder\Timestamp.txt" -NoNewline -Encoding ASCII
@@ -202,7 +282,38 @@ Write-Host "Successfully Timestamp in txt file saved"
 $ImpactedReport | Out-File -FilePath "$Folder\ImpactedReportName.txt" -NoNewline -Encoding ASCII
 Write-Host "Successfully ImpactedReport in txt file saved"
 
+#--------- Retrieve the Windows application logs for the specified date range----
+if ($SelectedOption[$SelectionOption5]) {
+$Applicationlogs = Get-WinEvent -FilterHashtable @{
+    LogName = "Application"
+    StartTime = $startDate
+    EndTime = $endDate
+}
+
+
+# Output the logs to a CSV file
+$Applicationlogs | Export-Csv -Path $ApplicationLogFile -NoTypeInformation
+
+Write-Host "Successfully Application Logs as csv saved"
+}
+
+#--------- Retrieve the Windows system logs for the specified date range----
+if ($SelectedOption[$SelectionOption5]) {
+$Systemlogs = Get-WinEvent -FilterHashtable @{
+    LogName = "System"
+    StartTime = $startDate
+    EndTime = $endDate
+}
+
+# Output the logs to a CSV file
+$Systemlogs | Export-Csv -Path $SystemLogFile -NoTypeInformation
+
+Write-Host "Successfully System Logs as csv saved"
+}
+
+
 #--------- Logfiles ----------------------------------------
+if ($SelectedOption[$SelectionOption2]) {
 # Get all .log files in the source folder
 $files = Get-ChildItem $PowerBILogs -Filter *.log -File
 
@@ -212,29 +323,41 @@ foreach ($file in $files) {
 
     Copy-Item $file.FullName $destinationFile
 }
-
+Write-Host "Successfully Report Server Logs collected"
+}
 
 #--------- RSreportserver.config ---------------------------
-  Copy-Item $RSreportserverConfigFile $FolderLogs -Force
+if ($SelectedOption[$SelectionOption1]) {
+  Copy-Item $RSreportserverConfigFile $Folder -Force
   Write-Host "Successfully collected the RSreportserver.config file
   "
+  }
 
 
 #---------- Getting Database tables -------------------------------
 #execute SQL commands to collect data
+#Write-Host "Collection of Data from Report Server Database"
+if ($SelectedOption[$SelectionOption4]) {
 Invoke-Sqlcmd -ServerInstance $serverInstancename -Database $ReportserverDB -Query $sqlcmdSubscriptionScheduleRefresh | Export-Csv -NoTypeInformation "$Folder\SubscriptionScheduleRefresh.csv" -Force
 Invoke-Sqlcmd -ServerInstance $serverInstancename -Database $ReportserverDB -Query $sqlcmdSubscriptionScheduleRefreshHistory | Export-Csv -NoTypeInformation "$Folder\SubscriptionScheduleRefreshHistory.csv" -Force
-Invoke-Sqlcmd -ServerInstance $serverInstancename -Database $ReportserverDB -Query $sqlcmdExecutionLog3 | Export-Csv -NoTypeInformation "$Folder\ExecutionLog3.csv" -Force
-Invoke-Sqlcmd -ServerInstance $serverInstancename -Database $ReportserverDB -Query $sqlcmdEvent  | Export-Csv -NoTypeInformation "$folder\Eventtable.csv" -Force
-Invoke-Sqlcmd -ServerInstance $serverInstancename -Database $ReportserverDB -Query $sqlcmdConfigurationInfo  | Export-Csv -NoTypeInformation "$folder\ConfigurationInfo.csv" -Force
-
-Write-Host "Collection of Data from Report Server Database"
-Write-Host "Successfully collected ExecutionLog3 table"
-Write-Host "Successfully collected Event table"
-Write-Host "Successfully collected ConfigurationInfo table"
 Write-Host "Successfully collected Subscription and Schedule Refresh Last Status"
-Write-Host "Successfully collected Subscription and Schedule Refresh History
+Write-Host "Successfully collected Subscription and Schedule Refresh History"
+}
+if ($SelectedOption[$SelectionOption3]) {
+Invoke-Sqlcmd -ServerInstance $serverInstancename -Database $ReportserverDB -Query $sqlcmdExecutionLog3 | Export-Csv -NoTypeInformation "$Folder\ExecutionLog3.csv" -Force
+Write-Host "Successfully collected ExecutionLog3 table"
+}
+
+if ($SelectedOption[$SelectionOption4]) {
+Invoke-Sqlcmd -ServerInstance $serverInstancename -Database $ReportserverDB -Query $sqlcmdEvent  | Export-Csv -NoTypeInformation "$folder\Eventtable.csv" -Force
+Write-Host "Successfully collected Event table"
+}
+
+if ($SelectedOption[$SelectionOption1]) {
+Invoke-Sqlcmd -ServerInstance $serverInstancename -Database $ReportserverDB -Query $sqlcmdConfigurationInfo  | Export-Csv -NoTypeInformation "$folder\ConfigurationInfo.csv" -Force
+Write-Host "Successfully collected ConfigurationInfo table
 "
+}
 
 
 #---------- Zipping all Files -------------------------------
