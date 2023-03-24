@@ -1,19 +1,22 @@
 ﻿<# 
-.SYNOPSIS
-Troubleshoot Power BI Report Server Issues
+SYNOPSIS:
+Data Collection Script for Power BI Report Server Issues
 
-.Objective
-This script has the objective to cover the data collection for the majority of troubleshooting scenarios related to Power BI Report Server
+Objective:
+This script has the objective to cover and simplify the data collection for the majority of troubleshooting scenarios related to Power BI Report Server.
 
-.DESCRIPTION
-The sample scripts are not supported under any Microsoft standard support program or service. 
-The sample scripts are provided AS IS without warranty of any kind. 
+Important Disclaimer:
+The script is not supported under any Microsoft standard support program or service. 
+The script is provided AS IS without warranty of any kind. 
 Microsoft further disclaims all implied warranties including, without limitation, any implied warranties of merchantability or of 
 fitness for a particular purpose. The entire risk arising out of the use or performance of the sample scripts and documentation 
 remains with you. In no event shall Microsoft, its authors, or anyone else involved in the creation, production, or delivery of 
 the scripts be liable for any damages whatsoever (including, without limitation, damages for loss of business profits, 
 business interruption, loss of business information, or other pecuniary loss) arising out of the use of or inability to use the 
 sample scripts or documentation, even if Microsoft has been advised of the possibility of such damages. 
+
+The collected data may contain Personally Identifiable Information (PII) and/or sensitive data, such as usernames.
+Therefore we advice that you review the created files before sharing it with anyone. 
 #>
 
 
@@ -25,10 +28,11 @@ $message = 'Description:
 Please be informed that this "Power BI Report Server Data Collection" script is designed to collect information that will help Microsoft Customer Support Services (CSS) troubleshoot an issue you may be experiencing with your report server.
 The script zips data from various sources to a destination you determine in a following step. The files will not automatically be shared with anyone but yourself. 
 
-Scope: included but not limited
+Please select scope in subsequent step from topics such as:
 - various report server database tables
-- rsreportserver.config
-- all ".log" files.
+- RS configuration info such as rsreportserver.config
+- all RS ".log" files.
+- system and application log: Error/warnings
 
 Disclaimer: Review the created files
 The collected data may contain Personally Identifiable Information (PII) and/or sensitive data, such as usernames.
@@ -49,8 +53,8 @@ if ($confirm -eq 'No') {
 $SelectionOption1 = "RS configuration info"
 $SelectionOption2 = "RS logs"
 $SelectionOption3 = "ExecutionLog3"
-$SelectionOption4 = "Performance / subscription / schedule refresh"
-$SelectionOption5 = "System and application log"
+$SelectionOption4 = "subscription / schedule refresh / event table"
+$SelectionOption5 = "System and application log: Error/Warnings"
 
 #-------- PopUp to determine which data will be collected ------------ 
 Add-Type -AssemblyName System.Windows.Forms
@@ -288,13 +292,14 @@ $Applicationlogs = Get-WinEvent -FilterHashtable @{
     LogName = "Application"
     StartTime = $startDate
     EndTime = $endDate
+    Level = 1,2,3  # Warning, Error, Critical
 }
 
 
 # Output the logs to a CSV file
 $Applicationlogs | Export-Csv -Path $ApplicationLogFile -NoTypeInformation
 
-Write-Host "Successfully Application Logs as csv saved"
+Write-Host "Successfully Application Logs as csv saved - Event Level Information and Verbose EXCLUDED"
 }
 
 #--------- Retrieve the Windows system logs for the specified date range----
@@ -303,12 +308,13 @@ $Systemlogs = Get-WinEvent -FilterHashtable @{
     LogName = "System"
     StartTime = $startDate
     EndTime = $endDate
+    Level = 1,2,3  # Warning, Error, Critical
 }
 
 # Output the logs to a CSV file
 $Systemlogs | Export-Csv -Path $SystemLogFile -NoTypeInformation
 
-Write-Host "Successfully System Logs as csv saved"
+Write-Host "Successfully System Logs as csv saved - Event Level Information and Verbose EXCLUDED"
 }
 
 
