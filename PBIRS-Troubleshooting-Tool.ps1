@@ -55,12 +55,13 @@ $SelectionOption2 = "RS logs"
 $SelectionOption3 = "ExecutionLog3"
 $SelectionOption4 = "subscription / schedule refresh / event table"
 $SelectionOption5 = "System and application log: Error/Warnings"
+$SelectionOption6 = "authentication scripts from aka.ms/authscripts"
 
 #-------- PopUp to determine which data will be collected ------------ 
 Add-Type -AssemblyName System.Windows.Forms
 $title = 'Topic Selector'
 $msg   = 
-$options = @($SelectionOption1,$SelectionOption2, $SelectionOption3, $SelectionOption4, $SelectionOption5)
+$options = @($SelectionOption1,$SelectionOption2, $SelectionOption3, $SelectionOption4, $SelectionOption5, $SelectionOption6)
 $checkedListBox = New-Object System.Windows.Forms.CheckedListBox
 $checkedListBox.Items.AddRange($options)
 $checkedListBox.CheckOnClick = $true # set CheckOnClick property to true
@@ -104,6 +105,7 @@ Write-Host $SelectionOption2": $($SelectedOption[$SelectionOption2])"
 Write-Host $SelectionOption3": $($SelectedOption[$SelectionOption3])"
 Write-Host $SelectionOption4": $($SelectedOption[$SelectionOption4])"
 Write-Host $SelectionOption5": $($SelectedOption[$SelectionOption5])"
+Write-Host $SelectionOption6": $($SelectedOption[$SelectionOption6])"
 
 
 #-------- Determining Input Varibles Through PopUp Message Boxes ------------ 
@@ -365,6 +367,93 @@ Write-Host "Successfully collected ConfigurationInfo table
 "
 }
 
+# Authentication Scripts
+if ($SelectedOption[$SelectionOption6]) {
+    
+# Check if PowerShell is running with administrative privileges
+if (-not ([Security.Principal.WindowsPrincipal] [Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)) {
+    Write-Host "Please run this script as an administrator."
+    [System.Windows.Forms.MessageBox]::Show("The authentication script has not been executed. For this step to complete please run Powershell as Admin")
+}
+
+if (([Security.Principal.WindowsPrincipal] [Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)) {
+    Write-Host "Admin check completed, starting Auth script now"
+
+Add-Type -AssemblyName System.Windows.Forms
+
+# Define the URL of the zip file
+$zipUrl = "https://aka.ms/authscript"
+# Define the path where the zip file will be downloaded and extracted
+$downloadPath = "$env:USERPROFILE\Downloads\AuthScript"
+# Create the download directory if it does not exist
+if (-not (Test-Path -Path $downloadPath)) {
+    New-Item -ItemType Directory -Path $downloadPath -force
+}
+
+# Download the zip file
+Invoke-WebRequest -Uri $zipUrl -OutFile "$downloadPath\auth.zip" 
+
+# Extract the contents of the zip file
+Expand-Archive -Path "$downloadPath\auth.zip" -DestinationPath $downloadPath -Force
+
+# Define the script paths
+$startScriptPath = "$downloadPath\start-auth.ps1"
+$stopScriptPath = "$downloadPath\stop-auth.ps1"
+
+# Define the form and controls
+$form = New-Object System.Windows.Forms.Form
+$form.Text = "Auth Script"
+$form.FormBorderStyle = [System.Windows.Forms.FormBorderStyle]::FixedDialog
+$form.MaximizeBox = $false
+$form.StartPosition = [System.Windows.Forms.FormStartPosition]::CenterScreen
+
+$startButton = New-Object System.Windows.Forms.Button
+$startButton.Location = New-Object System.Drawing.Point(10, 10)
+$startButton.Size = New-Object System.Drawing.Size(80, 25)
+$startButton.Text = "Start"
+$startButton.Add_Click({
+    # Execute the start-auth.ps1 script
+    $startProcess = Start-Process powershell.exe "-File $startScriptPath" -PassThru
+    $startButton.Enabled = $false
+    $stopButton.Enabled = $true
+    $cancelButton.Enabled = $true
+})
+
+$stopButton = New-Object System.Windows.Forms.Button
+$stopButton.Location = New-Object System.Drawing.Point(100, 10)
+$stopButton.Size = New-Object System.Drawing.Size(80, 25)
+$stopButton.Text = "Stop"
+$stopButton.Enabled = $false
+$stopButton.Add_Click({
+    # Execute the stop-auth.ps1 script
+    & $stopScriptPath
+    $startButton.Enabled = $true
+    $stopButton.Enabled = $false
+    $cancelButton.Enabled = $true
+})
+
+$cancelButton = New-Object System.Windows.Forms.Button
+$cancelButton.Location = New-Object System.Drawing.Point(190, 10)
+$cancelButton.Size = New-Object System.Drawing.Size(80, 25)
+$cancelButton.Text = "Cancel"
+$cancelButton.Enabled = $false
+$cancelButton.Add_Click({
+    # Stop the start-auth.ps1 script process
+    if ($startProcess) {
+        Stop-Process $startProcess.Id
+    }
+    $form.Close()
+})
+
+# Add the controls to the form
+$form.Controls.Add($startButton)
+$form.Controls.Add($stopButton)
+$form.Controls.Add($cancelButton)
+
+# Show the form
+$form.ShowDialog() | Out-Null
+}
+}
 
 #---------- Zipping all Files -------------------------------
 $zipFile = Join-Path -Path $Folder $ResultFileName
