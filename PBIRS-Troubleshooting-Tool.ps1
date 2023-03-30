@@ -90,7 +90,7 @@ $form.AcceptButton = $okButton
 $form.Controls.Add($okButton)
 
 # set the first four checkboxes to be checked by default
-for ($i = 0; $i -lt 4; $i++) {
+for ($i = 0; $i -lt 5; $i++) {
     $checkedListBox.SetItemChecked($i, $true)
 }
 
