@@ -54,25 +54,27 @@ $SelectionOption1 = "RS configuration info"
 $SelectionOption2 = "RS logs"
 $SelectionOption3 = "ExecutionLog3"
 $SelectionOption4 = "subscription / schedule refresh / event table"
-$SelectionOption5 = "System and application log: Error/Warnings"
-$SelectionOption6 = "authentication scripts from aka.ms/authscripts"
+$SelectionOption5 = "URL Reservations"
+$SelectionOption6 = "System and application log: Error/Warnings"
+$SelectionOption7 = "authentication scripts from aka.ms/authscripts"
 
 #-------- PopUp to determine which data will be collected ------------ 
 Add-Type -AssemblyName System.Windows.Forms
 $title = 'Topic Selector'
 $msg   = 
-$options = @($SelectionOption1,$SelectionOption2, $SelectionOption3, $SelectionOption4, $SelectionOption5, $SelectionOption6)
+$options = @($SelectionOption1,$SelectionOption2, $SelectionOption3, $SelectionOption4, $SelectionOption5, $SelectionOption6, $SelectionOption7)
 $checkedListBox = New-Object System.Windows.Forms.CheckedListBox
 $checkedListBox.Items.AddRange($options)
 $checkedListBox.CheckOnClick = $true # set CheckOnClick property to true
 $checkedListBox.Top = 20 # adjust position from the top
 $checkedListBox.Left = 20 # adjust position to the right
 $checkedListBox.Width = 250
+$checkedListBox.Height = 120
 $form = New-Object System.Windows.Forms.Form
 $form.StartPosition = 'CenterScreen' # set StartPosition property to CenterScreen
 $form.Text = $title
 $form.Width = 300
-$form.Height = 200 # increase height to avoid overlapping
+$form.Height = 210 # increase height to avoid overlapping
 $form.Controls.Add($checkedListBox)
 $label = New-Object System.Windows.Forms.Label
 $label.Text = 'Select the topics you want to collect:'
@@ -83,7 +85,7 @@ $okButton = New-Object System.Windows.Forms.Button
 $okButton.Text = 'OK'
 $okButton.DialogResult = [System.Windows.Forms.DialogResult]::OK
 $okButton.Left = 150 - $okButton.Width / 2
-$okButton.Top = 120 # increase top position to avoid overlapping
+$okButton.Top = 140 # increase top position to avoid overlapping
 $form.AcceptButton = $okButton
 $form.Controls.Add($okButton)
 
@@ -106,6 +108,7 @@ Write-Host $SelectionOption3": $($SelectedOption[$SelectionOption3])"
 Write-Host $SelectionOption4": $($SelectedOption[$SelectionOption4])"
 Write-Host $SelectionOption5": $($SelectedOption[$SelectionOption5])"
 Write-Host $SelectionOption6": $($SelectedOption[$SelectionOption6])"
+Write-Host $SelectionOption7": $($SelectedOption[$SelectionOption7])"
 
 
 #-------- Determining Input Varibles Through PopUp Message Boxes ------------ 
@@ -138,7 +141,7 @@ $title = 'Name Zip File'
 $msg   = 'This will be the name of the zip file'
 $ResultFileName = [Microsoft.VisualBasic.Interaction]::InputBox($msg, $title, $ResultFileName)
 
-if ($SelectedOption[$SelectionOption5]) {
+if ($SelectedOption[$SelectionOption6]) {
 $startDate = (Get-Date).AddDays(-1)
 [void][Reflection.Assembly]::LoadWithPartialName('Microsoft.VisualBasic')
 $title = 'Start of Event Log'
@@ -148,7 +151,7 @@ If you had the issue earlier please modify'
 $startDate = [Microsoft.VisualBasic.Interaction]::InputBox($msg, $title, $startDate)
 }
 
-if ($SelectedOption[$SelectionOption5]) {
+if ($SelectedOption[$SelectionOption6]) {
 $endDate = Get-Date
 [void][Reflection.Assembly]::LoadWithPartialName('Microsoft.VisualBasic')
 $title = 'End of Event Log'
@@ -289,7 +292,7 @@ $ImpactedReport | Out-File -FilePath "$Folder\ImpactedReportName.txt" -NoNewline
 Write-Host "Successfully ImpactedReport in txt file saved"
 
 #--------- Retrieve the Windows application logs for the specified date range----
-if ($SelectedOption[$SelectionOption5]) {
+if ($SelectedOption[$SelectionOption6]) {
 $Applicationlogs = Get-WinEvent -FilterHashtable @{
     LogName = "Application"
     StartTime = $startDate
@@ -304,8 +307,33 @@ $Applicationlogs | Export-Csv -Path $ApplicationLogFile -NoTypeInformation
 Write-Host "Successfully Application Logs as csv saved - Event Level Information and Verbose EXCLUDED"
 }
 
-#--------- Retrieve the Windows system logs for the specified date range----
+#--------- Retrieve just URL Reservations----
 if ($SelectedOption[$SelectionOption5]) {
+
+$tableURLRes = netsh http show urlacl | Select-String -Pattern '(?<=Reserved URL\s+: )(.+)' | ForEach-Object {
+    $_.Matches.Value.Split(',').Trim() | ForEach-Object {
+        New-Object -TypeName PSObject -Property @{
+            "Reserved URL" = $_
+        }
+    }
+}
+
+$tableURLRes | Export-Csv -Path "$Folder\URL_Reservations_OnlyURLs.csv" -NoTypeInformation
+
+
+Write-Host "Successfully Just Reservations collected"
+}
+
+#--------- Retrieve full show URLACL----
+if ($SelectedOption[$SelectionOption5]) {
+
+netsh http show urlacl | ForEach-Object { $_.Trim() } | ConvertFrom-String -Delimiter ": " | Select-Object @{Name="Property";Expression={$_.P1}}, @{Name="Value";Expression={$_.P2}} | Export-Csv -Path "$Folder\URL_Reservations_Full_ShowURLacl.csv" -NoTypeInformation
+
+Write-Host "Successfully Full Show URLACL collected"
+}
+
+#--------- Retrieve the Windows system logs for the specified date range----
+if ($SelectedOption[$SelectionOption6]) {
 $Systemlogs = Get-WinEvent -FilterHashtable @{
     LogName = "System"
     StartTime = $startDate
@@ -368,7 +396,7 @@ Write-Host "Successfully collected ConfigurationInfo table
 }
 
 # Authentication Scripts
-if ($SelectedOption[$SelectionOption6]) {
+if ($SelectedOption[$SelectionOption7]) {
     
 # Check if PowerShell is running with administrative privileges
 if (-not ([Security.Principal.WindowsPrincipal] [Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)) {
