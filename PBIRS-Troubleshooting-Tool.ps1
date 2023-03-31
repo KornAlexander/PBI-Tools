@@ -19,6 +19,9 @@ The collected data may contain Personally Identifiable Information (PII) and/or 
 Therefore we advice that you review the created files before sharing it with anyone. 
 #>
 
+#-------- Change here the preselected checkmarks for topics ------------
+$checkedItems = @(1, 2, 3, 4, 5, 6, 7)
+
 
 #-------- Disclaimer to Start Process ------------
 Add-Type -AssemblyName Microsoft.VisualBasic
@@ -57,24 +60,26 @@ $SelectionOption4 = "subscription / schedule refresh / event table"
 $SelectionOption5 = "URL Reservations"
 $SelectionOption6 = "System and application log: Error/Warnings"
 $SelectionOption7 = "authentication scripts from aka.ms/authscripts"
+$SelectionOption8 = "Report Server Language Settings"
+$SelectionOption9 = "Basic Info: Timestamp, Name of Report"
 
 #-------- PopUp to determine which data will be collected ------------ 
 Add-Type -AssemblyName System.Windows.Forms
 $title = 'Topic Selector'
 $msg   = 
-$options = @($SelectionOption1,$SelectionOption2, $SelectionOption3, $SelectionOption4, $SelectionOption5, $SelectionOption6, $SelectionOption7)
+$options = @($SelectionOption9, $SelectionOption1,$SelectionOption2, $SelectionOption3, $SelectionOption4, $SelectionOption5, $SelectionOption8, $SelectionOption6, $SelectionOption7)
 $checkedListBox = New-Object System.Windows.Forms.CheckedListBox
 $checkedListBox.Items.AddRange($options)
 $checkedListBox.CheckOnClick = $true # set CheckOnClick property to true
 $checkedListBox.Top = 20 # adjust position from the top
 $checkedListBox.Left = 20 # adjust position to the right
 $checkedListBox.Width = 250
-$checkedListBox.Height = 120
+$checkedListBox.Height = 140
 $form = New-Object System.Windows.Forms.Form
 $form.StartPosition = 'CenterScreen' # set StartPosition property to CenterScreen
 $form.Text = $title
 $form.Width = 300
-$form.Height = 210 # increase height to avoid overlapping
+$form.Height = 240 # increase height to avoid overlapping
 $form.Controls.Add($checkedListBox)
 $label = New-Object System.Windows.Forms.Label
 $label.Text = 'Select the topics you want to collect:'
@@ -85,31 +90,70 @@ $okButton = New-Object System.Windows.Forms.Button
 $okButton.Text = 'OK'
 $okButton.DialogResult = [System.Windows.Forms.DialogResult]::OK
 $okButton.Left = 150 - $okButton.Width / 2
-$okButton.Top = 140 # increase top position to avoid overlapping
+$okButton.Top = 170 # increase top position to avoid overlapping
 $form.AcceptButton = $okButton
 $form.Controls.Add($okButton)
 
 # set the first four checkboxes to be checked by default
-for ($i = 0; $i -lt 5; $i++) {
-    $checkedListBox.SetItemChecked($i, $true)
+#for ($i = 0; $i -lt 5; $i++) {
+#    $checkedListBox.SetItemChecked($i, $true)
+#}
+
+# set the checkboxes to be checked by default as previously defined
+foreach ($item in $checkedItems) {
+    $checkedListBox.SetItemChecked($item -1, $true)
 }
 
 $result = $form.ShowDialog()
 $SelectedOption = @{}
+
 if ($result -eq [System.Windows.Forms.DialogResult]::OK) {
+    # Check if any items are selected in the checkedListBox
+    if ($checkedListBox.CheckedItems.Count -eq 0) {
+        Write-Host "Please select at least one topic to collect data for. Aborting process" -ForegroundColor Red
+        exit 1  # abort the process with an error code
+    }
+    
+    # Proceed with the rest of the script
     foreach ($option in $options) {
         $SelectedOption[$option] = $checkedListBox.CheckedItems.Contains($option)
     }
 }
 
+Write-Host $SelectionOption9": $($SelectedOption[$SelectionOption9])"
 Write-Host $SelectionOption1": $($SelectedOption[$SelectionOption1])"
 Write-Host $SelectionOption2": $($SelectedOption[$SelectionOption2])"
 Write-Host $SelectionOption3": $($SelectedOption[$SelectionOption3])"
 Write-Host $SelectionOption4": $($SelectedOption[$SelectionOption4])"
 Write-Host $SelectionOption5": $($SelectedOption[$SelectionOption5])"
+Write-Host $SelectionOption8": $($SelectedOption[$SelectionOption8])"
 Write-Host $SelectionOption6": $($SelectedOption[$SelectionOption6])"
 Write-Host $SelectionOption7": $($SelectedOption[$SelectionOption7])"
 
+#-------- Stating where the file will be saved in and checking if Folder is Empty ------------ 
+$Folder = Join-Path $env:USERPROFILE "\Documents\ReportServerInvestigation"
+
+[void][Reflection.Assembly]::LoadWithPartialName('Microsoft.VisualBasic')
+$title = 'Path Result Folder'
+$msg   = 'This will be the path the collected documents will be saved in. The script automatically opens this path upon completion.
+
+Please make sure to select an empty or non-existent folder.'
+$Folder = [Microsoft.VisualBasic.Interaction]::InputBox($msg, $title, $Folder)
+
+if (Test-Path $Folder) {
+$items = Get-ChildItem $Folder | Measure-Object
+if ($items.Count -gt 0) {
+Write-Host "There are already items in the folder. Please select an empty folder or define a path which does not exist yet. Aborting the process." -ForegroundColor Red
+#---------- Opening Folder Path -------------------------------
+Invoke-Item $Folder
+
+return
+} else {
+Write-Host "The folder exists, but is empty."
+}
+} else {
+Write-Host "The folder doesn't exist."
+}
 
 #-------- Determining Input Varibles Through PopUp Message Boxes ------------ 
 Add-Type -AssemblyName Microsoft.VisualBasic
@@ -127,13 +171,6 @@ $ReportserverDB = [Microsoft.VisualBasic.Interaction]::InputBox($msg, $title, 'R
 $title = 'PBIRS Installation Path'
 $msg   = 'Enter your PBIRS Installation Path here:'
 $PBIRSInstallationPath = [Microsoft.VisualBasic.Interaction]::InputBox($msg, $title, 'C:\Program Files\Microsoft Power BI Report Server\')
-
-$Folder = Join-Path $env:USERPROFILE "\Documents\ReportServerInvestigation"
-
-[void][Reflection.Assembly]::LoadWithPartialName('Microsoft.VisualBasic')
-$title = 'Path Result Folder'
-$msg   = 'This will be the path the collected documents will be saved in'
-$Folder = [Microsoft.VisualBasic.Interaction]::InputBox($msg, $title, $Folder)
 
 $ResultFileName = (Get-Date).ToString("yyMMdd") + $env:USERNAME + "Result.zip" 
 [void][Reflection.Assembly]::LoadWithPartialName('Microsoft.VisualBasic')
@@ -161,6 +198,7 @@ To limit the data selection feel free to modify the collection to end at an earl
 $endDate = [Microsoft.VisualBasic.Interaction]::InputBox($msg, $title, $endDate)
 }
 
+if ($SelectedOption[$SelectionOption9]) {
 [void][Reflection.Assembly]::LoadWithPartialName('Microsoft.VisualBasic')
 $title = 'Time of Error'
 $msg   = 'Please provide one or multiple precise timestamp(s) when you experienced the error. 
@@ -174,6 +212,7 @@ $msg   = 'Please provide one or multiple report names you are having issues with
 
 If you have issues with all reports please leave ALL'
 $ImpactedReport = [Microsoft.VisualBasic.Interaction]::InputBox($msg, $title, "All")
+}
 
 #-------- Checking if a variable is empty and aborting the process if so ------------
 if ([string]::IsNullOrEmpty($ResultFileName) -or [string]::IsNullOrEmpty($Folder) -or [string]::IsNullOrEmpty($PBIRSInstallationPath) -or [string]::IsNullOrEmpty($ReportserverDB) -or [string]::IsNullOrEmpty($serverInstancename) -or [string]::IsNullOrEmpty($ErrorTime)) {
@@ -283,6 +322,21 @@ New Folder created $FolderLogs
 "
 }
 
+#--------- Starting process to collect information -----------------------------------------
+
+if ($SelectedOption[$SelectionOption9]) {
+#--------- Save Timestamp and Report Name---------------------------
+$ErrorTime_ImpactedReport = [PSCustomObject]@{
+    "ErrorTime" = $ErrorTime
+    "ImpactedReport" = $ImpactedReport
+    }
+
+$ErrorTime_ImpactedReport | Export-Csv -Path "$Folder\BasicInfo_Timestamp_ReportName.csv" -NoTypeInformation
+Write-Host "Successfully Timestamp in txt file saved"
+Write-Host "Successfully ImpactedReport in txt file saved"
+}
+
+<#
 #--------- Save Timestamp ----------------------------------------
 $ErrorTime | Out-File -FilePath "$Folder\Timestamp.txt" -NoNewline -Encoding ASCII
 Write-Host "Successfully Timestamp in txt file saved"
@@ -290,6 +344,7 @@ Write-Host "Successfully Timestamp in txt file saved"
 #--------- Save ReportName ----------------------------------------
 $ImpactedReport | Out-File -FilePath "$Folder\ImpactedReportName.txt" -NoNewline -Encoding ASCII
 Write-Host "Successfully ImpactedReport in txt file saved"
+#>
 
 #--------- Retrieve the Windows application logs for the specified date range----
 if ($SelectedOption[$SelectionOption6]) {
@@ -395,7 +450,31 @@ Write-Host "Successfully collected ConfigurationInfo table
 "
 }
 
-# Authentication Scripts
+#---------- Language Information -------------------------------
+if ($SelectedOption[$SelectionOption8]) {
+
+$CurrentCulture = Get-Culture # Get current culture
+$CurrentUICulture = Get-UICulture # Get current UI culture
+$SystemLocale = Get-WinSystemLocale # Get system default locale for non-Unicode programs
+$UserLanguageList = Get-WinUserLanguageList # Get list of input languages and their settings for the current user
+
+# Create an object containing the language information
+$LanguageInfo = [PSCustomObject]@{
+    "Current Culture" = $CurrentCulture.Name
+    "Current UI Culture" = $CurrentUICulture.Name
+    "System Default Locale" = $SystemLocale.Name
+    "User Language List" = ($UserLanguageList | Format-Table | Out-String)
+}
+
+# Save the language information to a CSV file
+$LanguageInfo | Export-Csv -Path "$Folder\LanguageInfo.csv" -NoTypeInformation
+
+Write-Output "Successfully PC Language collected"
+}
+
+
+#---------- Authentication Scripts -------------------------------
+
 if ($SelectedOption[$SelectionOption7]) {
     
 # Check if PowerShell is running with administrative privileges
@@ -483,17 +562,18 @@ $form.ShowDialog() | Out-Null
 }
 }
 
-#---------- Zipping all Files -------------------------------
+#------------------------Zipping all Files -----------------------------------
 $zipFile = Join-Path -Path $Folder $ResultFileName
 Compress-Archive -Path $Folder -DestinationPath $zipFile -force
-
 Write-Host "Successfully zipped the collected files"
+
 
 
 #---------- Removing non zipped Files -------------------------------
 Get-ChildItem $Folder | Where-Object { $_.Extension -ne '.zip' } | Remove-Item -Recurse -Force
 
 Write-Host "Successfully deleted non-zipped files"
+
 
 #---------- Finished Message Box -------------------------------
 [System.Windows.Forms.MessageBox]::Show("Please check the successful completion in $Folder", "Script Completed", "OK", "Information")
