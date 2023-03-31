@@ -170,7 +170,7 @@ $ReportserverDB = [Microsoft.VisualBasic.Interaction]::InputBox($msg, $title, 'R
 [void][Reflection.Assembly]::LoadWithPartialName('Microsoft.VisualBasic')
 $title = 'PBIRS Installation Path'
 $msg   = 'Enter your PBIRS Installation Path here:'
-$PBIRSInstallationPath = [Microsoft.VisualBasic.Interaction]::InputBox($msg, $title, 'C:\Program Files\Microsoft Power BI Report Server\')
+$PBIRSInstallationPath = [Microsoft.VisualBasic.Interaction]::InputBox($msg, $title, 'C:\Program Files\Microsoft Power BI Report Server\PBIRS\')
 
 $ResultFileName = (Get-Date).ToString("yyMMdd") + $env:USERNAME + "Result.zip" 
 [void][Reflection.Assembly]::LoadWithPartialName('Microsoft.VisualBasic')
@@ -223,8 +223,8 @@ if ([string]::IsNullOrEmpty($ResultFileName) -or [string]::IsNullOrEmpty($Folder
 
 #-------- Other variables ------------
 $FolderLogs = Join-Path -Path $Folder "\Logs"
-$PowerBILogs = $PBIRSInstallationPath + "PBIRS\LogFiles"
-$RSreportserverConfigFile = $PBIRSInstallationPath + "PBIRS\ReportServer\RSreportserver.config"
+$PowerBILogs = $PBIRSInstallationPath + "\LogFiles"
+$RSreportserverConfigFile = $PBIRSInstallationPath + "ReportServer\RSreportserver.config"
 $ApplicationLogFile = $Folder+"\ApplicationLog.csv"
 $SystemLogFile = $Folder+"\SystemLog.csv"
 
