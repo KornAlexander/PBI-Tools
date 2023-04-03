@@ -20,7 +20,7 @@ Therefore we advice that you review the created files before sharing it with any
 #>
 
 #-------- Change here the preselected checkmarks for topics ------------
-$checkedItems = @(1, 2, 3, 4, 5, 6, 7)
+$checkedItems = @(1, 2, 3, 4, 5, 6, 7, 8)
 
 
 #-------- Disclaimer to Start Process ------------
@@ -62,12 +62,14 @@ $SelectionOption6 = "System and application log: Error/Warnings"
 $SelectionOption7 = "authentication scripts from aka.ms/authscripts"
 $SelectionOption8 = "Report Server Language Settings"
 $SelectionOption9 = "Basic Info: Timestamp, Name of Report"
+$SelectionOption10 = "RS web.config / rssrvpolicy.config files"
+
 
 #-------- PopUp to determine which data will be collected ------------ 
 Add-Type -AssemblyName System.Windows.Forms
 $title = 'Topic Selector'
 $msg   = 
-$options = @($SelectionOption9, $SelectionOption1,$SelectionOption2, $SelectionOption3, $SelectionOption4, $SelectionOption5, $SelectionOption8, $SelectionOption6, $SelectionOption7)
+$options = @($SelectionOption9, $SelectionOption1,$SelectionOption2, $SelectionOption3, $SelectionOption4, $SelectionOption5, $SelectionOption8, $SelectionOption10, $SelectionOption6, $SelectionOption7)
 $checkedListBox = New-Object System.Windows.Forms.CheckedListBox
 $checkedListBox.Items.AddRange($options)
 $checkedListBox.CheckOnClick = $true # set CheckOnClick property to true
@@ -227,6 +229,9 @@ $PowerBILogs = $PBIRSInstallationPath + "\LogFiles"
 $RSreportserverConfigFile = $PBIRSInstallationPath + "ReportServer\RSreportserver.config"
 $ApplicationLogFile = $Folder+"\ApplicationLog.csv"
 $SystemLogFile = $Folder+"\SystemLog.csv"
+
+$rssrvpolicyConfigFile = $PBIRSInstallationPath + "ReportServer\rssrvpolicy.config"
+$webConfigFile = $PBIRSInstallationPath + "ReportServer\web.config"
 
 
 #-------- SQL Command Subscription and Schedule Refresh ----------
@@ -424,6 +429,13 @@ if ($SelectedOption[$SelectionOption1]) {
   "
   }
 
+#--------- RSreportserver.config ---------------------------
+if ($SelectedOption[$SelectionOption10]) {
+  Copy-Item $rssrvpolicyConfigFile $Folder -Force
+  Copy-Item $webConfigFile $Folder -Force
+  Write-Host "Successfully collected the Web.config Rssrvpolicy.config files
+  "
+  }
 
 #---------- Getting Database tables -------------------------------
 #execute SQL commands to collect data
