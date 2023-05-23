@@ -28,7 +28,7 @@ Add-Type -AssemblyName Microsoft.VisualBasic
 [void][Reflection.Assembly]::LoadWithPartialName('Microsoft.VisualBasic')
 $title = 'Info'
 $message = 'Description: 
-Please be informed that this "Power BI Report Server Data Collection" script is designed to collect information that will help Microsoft Customer Support Services (CSS) troubleshoot an issue you may be experiencing with your report server.
+Please be informed that this "Report Server Data Collection" script is designed to collect information that will help Microsoft Customer Support Services (CSS) troubleshoot an issue you may be experiencing with your report server.
 The script zips data from various sources to a destination you determine in a following step. The files will not automatically be shared with anyone but yourself. 
 
 Please select scope in subsequent step from topics such as:
@@ -57,19 +57,21 @@ $SelectionOption1 = "RS configuration info"
 $SelectionOption2 = "RS logs"
 $SelectionOption3 = "ExecutionLog3"
 $SelectionOption4 = "subscription / schedule refresh / event table"
-$SelectionOption5 = "URL Reservations"
+$SelectionOption5 = "URL Reservations / Netsh"
 $SelectionOption6 = "System and application log: Error/Warnings"
 $SelectionOption7 = "authentication scripts from aka.ms/authscripts"
 $SelectionOption8 = "Report Server Language Settings"
-$SelectionOption9 = "Basic Info: Timestamp, Name of Report"
+$SelectionOption9 = "Basic Info: Timestamp, Name of Report, RS Version"
 $SelectionOption10 = "RS web.config / rssrvpolicy.config files"
+$SelectionOption11 = "Create Backup of rsreportserver.config file"
+$SelectionOption12 = "netsh information urlacl and sslcert"
 
 
 #-------- PopUp to determine which data will be collected ------------ 
 Add-Type -AssemblyName System.Windows.Forms
 $title = 'Topic Selector'
 $msg   = 
-$options = @($SelectionOption9, $SelectionOption1,$SelectionOption2, $SelectionOption3, $SelectionOption4, $SelectionOption5, $SelectionOption8, $SelectionOption10, $SelectionOption6, $SelectionOption7)
+$options = @($SelectionOption9, $SelectionOption1,$SelectionOption2, $SelectionOption3, $SelectionOption4, $SelectionOption5, $SelectionOption8, $SelectionOption10, $SelectionOption11, $SelectionOption6, $SelectionOption7)
 $checkedListBox = New-Object System.Windows.Forms.CheckedListBox
 $checkedListBox.Items.AddRange($options)
 $checkedListBox.CheckOnClick = $true # set CheckOnClick property to true
@@ -131,6 +133,70 @@ Write-Host $SelectionOption5": $($SelectedOption[$SelectionOption5])"
 Write-Host $SelectionOption8": $($SelectedOption[$SelectionOption8])"
 Write-Host $SelectionOption6": $($SelectedOption[$SelectionOption6])"
 Write-Host $SelectionOption7": $($SelectedOption[$SelectionOption7])"
+Write-Host $SelectionOption10": $($SelectedOption[$SelectionOption10])"
+Write-Host $SelectionOption11": $($SelectedOption[$SelectionOption11])"
+
+#-------- Checking which version is installed in all drives ------------
+$drive = $null
+$drives = $null
+$drives = Get-PSDrive -PSProvider FileSystem | Select-Object -ExpandProperty Name
+
+Write-Host "drives found: $drives"
+
+$paths = @(
+    "Microsoft Power BI Report Server\PBIRS",
+    "Microsoft SQL Server Reporting Services\SSRS",
+    "Microsoft SQL Server\MSRS13.MSSQLSERVER\Reporting Services"
+)
+
+$PBIRSPath = $null
+$SSRS2017OrLater = $null
+$SSRS2016OrEarlier = $null
+
+foreach ($path in $paths) {
+    $found = $false  # Flag to track if path is found on any drive
+    foreach ($drive in $drives) {
+        $fullPath = "${drive}:\\Program Files\$path"
+        if (Test-Path $fullPath) {
+            switch ($path) {
+                "Microsoft Power BI Report Server\PBIRS" {
+                    $PBIRSPath = "$fullPath"
+                }
+                "Microsoft SQL Server Reporting Services\SSRS" {
+                    $SSRS2017OrLaterPath = "$fullPath"
+                }
+                "Microsoft SQL Server\MSRS13.MSSQLSERVER\Reporting Services" {
+                    $SSRS2016OrEarlierPath = "$fullPath"
+                }
+            }
+            $found = $true
+            Write-Host "Found $fullPath"
+            break  # Exit the inner loop since path is found on a drive
+        }
+    }
+
+    if (-not $found) {
+        switch ($path) {
+            "Microsoft Power BI Report Server\PBIRS" {
+                $PBIRSPath = "No"
+            }
+            "Microsoft SQL Server Reporting Services\SSRS" {
+                $SSRS2017OrLaterPath = "No"
+            }
+            "Microsoft SQL Server\MSRS13.MSSQLSERVER\Reporting Services" {
+                $SSRS2016OrEarlierPath = "No"
+            }
+        }
+        Write-Host "Not Found $path"
+    }
+}
+
+# Display the output messages
+Write-Output "PBIRS Path if exists = $PBIRSPath"
+Write-Output "SSRS2017OrLater Path if Exists = $SSRS2017OrLaterPath"
+Write-Output "SSRS2016OrEarlier Path if Exists = $SSRS2016OrEarlierPath"
+
+
 
 #-------- Stating where the file will be saved in and checking if Folder is Empty ------------ 
 $Folder = Join-Path $env:USERPROFILE "\Documents\ReportServerInvestigation"
@@ -145,6 +211,19 @@ $Folder = [Microsoft.VisualBasic.Interaction]::InputBox($msg, $title, $Folder)
 if (Test-Path $Folder) {
 $items = Get-ChildItem $Folder | Measure-Object
 if ($items.Count -gt 0) {
+
+Add-Type -AssemblyName Microsoft.VisualBasic
+[void][Reflection.Assembly]::LoadWithPartialName('Microsoft.VisualBasic')
+$title = 'Path already exists'
+$message = 'The selected path already contains data. 
+Please make sure the selected folder is empty. 
+
+Click Okay to open the currently selefolder'
+$confirm = [Microsoft.VisualBasic.Interaction]::MsgBox(
+    $message,
+    [Microsoft.VisualBasic.MsgBoxStyle]::Information + [Microsoft.VisualBasic.MsgBoxStyle]::Okay,
+    $title
+)
 Write-Host "There are already items in the folder. Please select an empty folder or define a path which does not exist yet. Aborting the process." -ForegroundColor Red
 #---------- Opening Folder Path -------------------------------
 Invoke-Item $Folder
@@ -169,10 +248,39 @@ $title = 'Report Server Database Name'
 $msg   = 'Enter your Report Server Database Name here:'
 $ReportserverDB = [Microsoft.VisualBasic.Interaction]::InputBox($msg, $title, 'ReportServer')
 
-[void][Reflection.Assembly]::LoadWithPartialName('Microsoft.VisualBasic')
+#-------- Based on the logic 
+if ($PBIRSPath -eq "No") {
+    Write-Host "PBIRS not installed going to the next check"
+
+    if ($SSRS2017OrLaterPath -eq "No") {
+        Write-Host "SSRS 2017 not installed going to the next check"
+
+        if ($SSRS2016OrEarlierPath -eq "No") {
+            Write-Host "SSRS 2016 not installed going to the next check"
+        } else {
+                [void][Reflection.Assembly]::LoadWithPartialName('Microsoft.VisualBasic')
+$title = 'SSRS Installation Path'
+$msg   = 'We recognized you are using SSRS 2016 or an earlier version and have it installed in the following path. Please confirm if this is the instance you want to work with.
+If you want to analyze a different instance please manually change the installation path'
+$PBIRSInstallationPath = [Microsoft.VisualBasic.Interaction]::InputBox($msg, $title, "$SSRS2016OrEarlierPath\")
+        }
+    } else {
+    [void][Reflection.Assembly]::LoadWithPartialName('Microsoft.VisualBasic')
+$title = 'SSRS 2017 Installation Path'
+$msg   = 'We recognized you are using SSRS 2017 or a later version and have it installed in the following path. Please confirm if this is the instance you want to work with.
+If you want to analyze a different instance please manually change the installation path'
+$PBIRSInstallationPath = [Microsoft.VisualBasic.Interaction]::InputBox($msg, $title, "$SSRS2017OrLaterPath\")
+    }
+} else {
+    [void][Reflection.Assembly]::LoadWithPartialName('Microsoft.VisualBasic')
 $title = 'PBIRS Installation Path'
-$msg   = 'Enter your PBIRS Installation Path here:'
-$PBIRSInstallationPath = [Microsoft.VisualBasic.Interaction]::InputBox($msg, $title, 'C:\Program Files\Microsoft Power BI Report Server\PBIRS\')
+$msg   = 'We recognized you are using Power BI Report Server and have it installed in the following path. Please confirm if this is the instance you want to work with.
+If you want to analyze a different instance or SSRS please change the installation path manually'
+$PBIRSInstallationPath = [Microsoft.VisualBasic.Interaction]::InputBox($msg, $title, "$PBIRSPath\")
+}
+
+
+#------------ Other prompts for input variables  ------------ 
 
 $ResultFileName = (Get-Date).ToString("yyMMdd") + $env:USERNAME + "Result.zip" 
 [void][Reflection.Assembly]::LoadWithPartialName('Microsoft.VisualBasic')
@@ -241,7 +349,54 @@ $RenderFormatExpression = 'ISNULL(Convert(XML,sub.[ExtensionSettings]).value(' +
 $SubjectValue = '(//ParameterValue/Value[../Name="Subject"])[1]'
 $SubjectExpression = "Convert(XML,sub.[ExtensionSettings]).value('$SubjectValue', 'nvarchar(150)') AS [Subject]"
 
-$sqlcmdSubscriptionScheduleRefresh = 
+$sqlcmdSubscriptionScheduleRefreshSSRS = 
+@"
+SELECT rs.ReportID
+,rs.SubscriptionID
+,SUBSTRING(cat.[Path],1,LEN(cat.[Path])-LEN(cat.[Name])) AS ReportFolder
+,cat.[Name] AS ReportName
+,sub.[Description] AS SubscriptionDescription
+,sub.LastStatus
+,sub.LastRunTime
+,sub.EventType
+,s.ScheduleID AS JobName
+,'EXEC msdb.dbo.sp_start_job @job_name = ''' + CAST(s.ScheduleID AS VARCHAR(50)) + '''' AS RunSubscriptionManually
+,s.StartDate
+,s.EndDate
+,CASE   WHEN s.RecurrenceType=1 THEN 'Once'  
+    WHEN s.RecurrenceType=2 THEN 'Hourly'  
+    WHEN s.RecurrenceType=3 THEN 'Daily'  
+    WHEN s.RecurrenceType=4 AND s.WeeksInterval <= 1 THEN 'Daily'  
+    WHEN s.RecurrenceType=4 AND s.WeeksInterval > 1 THEN 'Weekly'
+        WHEN s.RecurrenceType=5 THEN 'Monthly (days)'  
+        WHEN s.RecurrenceType=6 THEN 'Monthly (weeks)'  
+END AS Recurrence
+,s.MinutesInterval
+,s.DaysInterval
+,s.WeeksInterval
+,s.DaysOfWeek
+,s.DaysOfMonth
+,s.[Month]
+,s.MonthlyWeek
+,$RenderFormatExpression
+,$SubjectExpression
+,sub.[Parameters]
+,cat.[Path]
+,cat.CreationDate  AS ReportCreateDate
+,cat.ModifiedDate AS ReportSettingsModified
+,u.UserName
+,sub.DataSettings AS DataDrivenSettings
+,sub.ExtensionSettings
+,sub.OwnerID AS SubscriptionOwnerID
+FROM dbo.ReportSchedule rs WITH (NOLOCK)
+INNER JOIN dbo.Schedule s WITH (NOLOCK) ON rs.ScheduleID = s.ScheduleID
+INNER JOIN dbo.[Catalog] cat WITH (NOLOCK) ON rs.ReportID = cat.ItemID
+INNER JOIN dbo.Subscriptions sub WITH (NOLOCK) ON rs.SubscriptionID = sub.SubscriptionID
+INNER JOIN dbo.Users u WITH (NOLOCK) ON sub.OwnerID = u.UserID
+"@
+
+
+$sqlcmdSubscriptionScheduleRefreshPBIRS = 
 @"
 SELECT rs.ReportID
 ,rs.SubscriptionID
@@ -312,6 +467,7 @@ $sqlcmdConfigurationInfo = "SELECT * FROM [dbo].[ConfigurationInfo]"
 
 #--------- Install Prereq SQL Module -------------
 #install module
+Set-PSRepository -Name 'PSGallery' -InstallationPolicy Trusted
 Install-Module -Name SqlServer -AllowClobber -Scope CurrentUser
 
 
@@ -329,14 +485,53 @@ New Folder created $FolderLogs
 
 #--------- Starting process to collect information -----------------------------------------
 
+
+
+#--------- Check version in ReportingServicesService log file -----------------------------------------
+
+# Specify the directory path where the files are located
+$directoryPath = "$PBIRSInstallationPath\LogFiles"
+
+# Search for files with names starting with "ReportingServicesService" in the specified directory
+$files = Get-ChildItem -Path $directoryPath -Filter "ReportingServicesService_*" | Sort-Object LastWriteTime -Descending
+
+if ($files.Count -gt 0) {
+    # Get the most recently modified file
+    $mostRecentFile = $files[0].FullName
+
+    try {
+        # Read the contents of the most recently modified file
+        $fileContent = Get-Content -Path $mostRecentFile -Raw
+
+        # Extract the version using regex
+        $pattern = "(?<=<Product>)(.*?)(?=</Product>)"
+        $matches = [regex]::Matches($fileContent, $pattern)
+        if ($matches.Count -gt 0) {
+            $installedVersion = $matches[0].Value
+
+            Write-Host "Version found in $mostRecentFile"
+            Write-Host "Installed version: $installedVersion"
+        } else {
+            Write-Host "Version not found in $mostRecentFile."
+        }
+    }
+    catch {
+        Write-Host "Failed to read the file $mostRecentFile."
+    }
+}
+else {
+    Write-Host "No files starting with 'ReportingServicesService' found in the specified directory."
+}
+
 if ($SelectedOption[$SelectionOption9]) {
 #--------- Save Timestamp and Report Name---------------------------
 $ErrorTime_ImpactedReport = [PSCustomObject]@{
     "ErrorTime" = $ErrorTime
     "ImpactedReport" = $ImpactedReport
+    "Version" = $installedVersion
     }
 
-$ErrorTime_ImpactedReport | Export-Csv -Path "$Folder\BasicInfo_Timestamp_ReportName.csv" -NoTypeInformation
+$ErrorTime_ImpactedReport | Export-Csv -Path "$Folder\BasicInfo_Timestamp_ReportName_Version.csv" -NoTypeInformation
 Write-Host "Successfully Timestamp in txt file saved"
 Write-Host "Successfully ImpactedReport in txt file saved"
 }
@@ -392,6 +587,14 @@ netsh http show urlacl | ForEach-Object { $_.Trim() } | ConvertFrom-String -Deli
 Write-Host "Successfully Full Show URLACL collected"
 }
 
+#--------- Retrieve SSLCert ----
+if ($SelectedOption[$SelectionOption5]) {
+
+netsh http show sslcert > "$Folder\URL_Reservations_SSLCERT.txt"
+
+Write-Host "Successfully netsh SSLCert collected"
+}
+
 #--------- Retrieve the Windows system logs for the specified date range----
 if ($SelectedOption[$SelectionOption6]) {
 $Systemlogs = Get-WinEvent -FilterHashtable @{
@@ -429,7 +632,7 @@ if ($SelectedOption[$SelectionOption1]) {
   "
   }
 
-#--------- RSreportserver.config ---------------------------
+#--------- RS srvpolicy and web.config ---------------------------
 if ($SelectedOption[$SelectionOption10]) {
   Copy-Item $rssrvpolicyConfigFile $Folder -Force
   Copy-Item $webConfigFile $Folder -Force
@@ -441,10 +644,19 @@ if ($SelectedOption[$SelectionOption10]) {
 #execute SQL commands to collect data
 #Write-Host "Collection of Data from Report Server Database"
 if ($SelectedOption[$SelectionOption4]) {
-Invoke-Sqlcmd -ServerInstance $serverInstancename -Database $ReportserverDB -Query $sqlcmdSubscriptionScheduleRefresh | Export-Csv -NoTypeInformation "$Folder\SubscriptionScheduleRefresh.csv" -Force
-Invoke-Sqlcmd -ServerInstance $serverInstancename -Database $ReportserverDB -Query $sqlcmdSubscriptionScheduleRefreshHistory | Export-Csv -NoTypeInformation "$Folder\SubscriptionScheduleRefreshHistory.csv" -Force
+
+if ($PBIRSInstallationPath -notlike "*Power BI Report Server*") {
+    Write-Host "PBIRS not installed going to the next check"
+    
+    if ($PBIRSInstallationPath -notlike "*SQL Server*") {
+        Write-Host "SSRS not installed going to the next check"
+    } else {Invoke-Sqlcmd -ServerInstance $serverInstancename -Database $ReportserverDB -Query $sqlcmdSubscriptionScheduleRefreshSSRS | Export-Csv -NoTypeInformation "$Folder\SubscriptionScheduleRefresh.csv" -Force
 Write-Host "Successfully collected Subscription and Schedule Refresh Last Status"
-Write-Host "Successfully collected Subscription and Schedule Refresh History"
+}
+    } else {Invoke-Sqlcmd -ServerInstance $serverInstancename -Database $ReportserverDB -Query $sqlcmdSubscriptionScheduleRefreshPBIRS | Export-Csv -NoTypeInformation "$Folder\SubscriptionScheduleRefresh.csv" -Force
+    Invoke-Sqlcmd -ServerInstance $serverInstancename -Database $ReportserverDB -Query $sqlcmdSubscriptionScheduleRefreshHistory | Export-Csv -NoTypeInformation "$Folder\SubscriptionScheduleRefreshHistory.csv" -Force
+    Write-Host "Successfully collected Subscription and Schedule Refresh Last Status"
+    Write-Host "Successfully collected Subscription and Schedule Refresh History"}
 }
 if ($SelectedOption[$SelectionOption3]) {
 Invoke-Sqlcmd -ServerInstance $serverInstancename -Database $ReportserverDB -Query $sqlcmdExecutionLog3 | Export-Csv -NoTypeInformation "$Folder\ExecutionLog3.csv" -Force
@@ -484,6 +696,20 @@ $LanguageInfo | Export-Csv -Path "$Folder\LanguageInfo.csv" -NoTypeInformation
 Write-Output "Successfully PC Language collected"
 }
 
+
+#---------- Action create a copy of rsreportserver.config ------------------------------
+if ($SelectedOption[$SelectionOption11]) {
+$destinationFolder = $PBIRSInstallationPath + "ReportServer\"
+$timestamprsconfig = Get-Date -Format "yyyyMMddHHmmss"
+$destinationPathrsconfig = Join-Path -Path $destinationFolder -ChildPath "rsreportserver_$timestamprsconfig.config"
+
+# Copy the file to the destination
+Copy-Item $RSreportserverConfigFile $destinationPathrsconfig
+
+# Output the copied file's path
+Write-Host "Successfully rsreportserver.config backed-up to: $destinationPathrsconfig
+  "
+  }
 
 #---------- Authentication Scripts -------------------------------
 
@@ -580,7 +806,6 @@ Compress-Archive -Path $Folder -DestinationPath $zipFile -force
 Write-Host "Successfully zipped the collected files"
 
 
-
 #---------- Removing non zipped Files -------------------------------
 Get-ChildItem $Folder | Where-Object { $_.Extension -ne '.zip' } | Remove-Item -Recurse -Force
 
@@ -590,11 +815,23 @@ Write-Host "Successfully deleted non-zipped files"
 #---------- Finished Message Box -------------------------------
 [System.Windows.Forms.MessageBox]::Show("Please check the successful completion in $Folder", "Script Completed", "OK", "Information")
 
+
+#---------- Open RSConfig file folder -------------------------------
+if ($SelectedOption[$SelectionOption11]) {
+if(Test-Path $destinationFolder) {
+    Invoke-Item $destinationFolder
+    Start-Sleep -Milliseconds 100
+}
+else {
+    Write-Host "Rsreportserver.config file folder not found at specified location."
+    }
+      }
+
 #---------- Opening Folder Path with file -------------------------------
 if(Test-Path $Folder) {
     Invoke-Item $Folder
 }
 else {
-    Write-Host "Folder not found at specified location."
+    Write-Host "Destination Folder not found at specified location."
 }
 
