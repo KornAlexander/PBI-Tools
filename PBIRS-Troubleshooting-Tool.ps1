@@ -65,13 +65,14 @@ $SelectionOption9 = "Basic Info: Timestamp, Name of Report, RS Version"
 $SelectionOption10 = "RS web.config / rssrvpolicy.config files"
 $SelectionOption11 = "Create Backup of rsreportserver.config file"
 $SelectionOption12 = "netsh information urlacl and sslcert"
+$SelectionOption13 = "BackConnectionHostNames Regedit"
 
 
 #-------- PopUp to determine which data will be collected ------------ 
 Add-Type -AssemblyName System.Windows.Forms
 $title = 'Topic Selector'
 $msg   = 
-$options = @($SelectionOption9, $SelectionOption1,$SelectionOption2, $SelectionOption3, $SelectionOption4, $SelectionOption5, $SelectionOption8, $SelectionOption10, $SelectionOption11, $SelectionOption6, $SelectionOption7)
+$options = @($SelectionOption9, $SelectionOption1,$SelectionOption2, $SelectionOption3, $SelectionOption4, $SelectionOption5, $SelectionOption8, $SelectionOption10, $SelectionOption13, $SelectionOption11, $SelectionOption6, $SelectionOption7)
 $checkedListBox = New-Object System.Windows.Forms.CheckedListBox
 $checkedListBox.Items.AddRange($options)
 $checkedListBox.CheckOnClick = $true # set CheckOnClick property to true
@@ -97,6 +98,15 @@ $okButton.Left = 150 - $okButton.Width / 2
 $okButton.Top = 170 # increase top position to avoid overlapping
 $form.AcceptButton = $okButton
 $form.Controls.Add($okButton)
+
+# Event handler for form resize
+$form.add_Resize({
+    $checkedListBox.Width = $form.ClientSize.Width - 40
+    $checkedListBox.Height = $form.ClientSize.Height - 120
+    $label.Width = $checkedListBox.Width
+    $okButton.Left = ($form.ClientSize.Width / 2) - ($okButton.Width / 2)
+    $okButton.Top = $form.ClientSize.Height - 70
+})
 
 # set the first four checkboxes to be checked by default
 #for ($i = 0; $i -lt 5; $i++) {
@@ -135,6 +145,8 @@ Write-Host $SelectionOption6": $($SelectedOption[$SelectionOption6])"
 Write-Host $SelectionOption7": $($SelectedOption[$SelectionOption7])"
 Write-Host $SelectionOption10": $($SelectedOption[$SelectionOption10])"
 Write-Host $SelectionOption11": $($SelectedOption[$SelectionOption11])"
+Write-Host $SelectionOption12": $($SelectedOption[$SelectionOption12])"
+Write-Host $SelectionOption13": $($SelectedOption[$SelectionOption13])"
 
 #-------- Checking which version is installed in all drives ------------
 $drive = $null
@@ -710,6 +722,82 @@ Copy-Item $RSreportserverConfigFile $destinationPathrsconfig
 Write-Host "Successfully rsreportserver.config backed-up to: $destinationPathrsconfig
   "
   }
+
+
+#---------- BackConnectionHostNames and DisableStrictName -------------------------------
+
+if ($SelectedOption[$SelectionOption13]) {
+$RegistryPathStrictName = "HKLM:\System\CurrentControlSet\Services\LanmanServer\Parameters"
+$EntryNameStrictName = "DisableStrictNameChecking"
+
+$RegistryPathBackConn = "HKLM:\SYSTEM\CurrentControlSet\Control\Lsa\MSV1_0"
+$EntryNameBackConn = "BackConnectionHostNames"
+
+######### BackConnectionHostNames ############
+# Check if the entry exists
+if (Test-Path -Path $RegistryPathBackConn) {
+    $Entry = Get-Item -Path $RegistryPathBackConn | Get-ItemProperty -Name $EntryNameBackConn -ErrorAction SilentlyContinue
+
+    # Check if the entry property exists and has a value
+    if ($Entry -ne $null -and $Entry.$EntryNameBackConn -ne $null -and $Entry.$EntryNameBackConn.Length -gt 0) {
+        $EntryType = $Entry.$EntryNameBackConn[0].GetType().Name
+        $EntryValue = $Entry.$EntryNameBackConn -join ";"
+    }
+    else {
+        $EntryType = "Empty"
+        $EntryValue = "N/A"
+    }
+}
+else {
+    $EntryType = "Not found"
+    $EntryValue = "Registry Entry Not Found"
+}
+
+# Create an object to store the result
+$BackConnectionResult = [PSCustomObject]@{
+    'Name' = 'BackConnectionHostNames'
+    'EntryType' = $EntryType
+    'EntryValue' = $EntryValue
+}
+
+
+######### DisableStrictNameChecking ############
+# Check if the entry exists
+if (Test-Path -Path $RegistryPathStrictName) {
+    $Entry = Get-Item -Path $RegistryPathStrictName | Get-ItemProperty -Name $EntryNameStrictName -ErrorAction SilentlyContinue
+
+    # Check if the entry property exists and has a value
+    if ($Entry -ne $null -and $Entry.$EntryNameStrictName -ne $null) {
+        $EntryType = $Entry.$EntryNameStrictName.GetType().Name
+        $EntryValue = $Entry.$EntryNameStrictName
+    } else {
+        $EntryType = "Empty"
+        $EntryValue = "N/A"
+    }
+} else {
+    $EntryType = "Not found"
+    $EntryValue = "Registry Entry Not Found"
+}
+
+# Create an object to store the result
+$DisableStrictNameCheckingResult = [PSCustomObject]@{
+    'Name' = 'DisableStrictNameChecking'
+    'EntryType' = $EntryType
+    'EntryValue' = $EntryValue
+}
+
+
+# Combine the results into a single object
+$CombinedResult = New-Object -TypeName 'System.Collections.ArrayList'
+$CombinedResult.Add($BackConnectionResult)
+$CombinedResult.Add($DisableStrictNameCheckingResult)
+
+
+# Export the combined results to a CSV file
+$CombinedResult | Export-Csv -Path "$Folder\BackConnectionHostNamesAndDisableStrictName.csv"  -NoTypeInformation
+}
+
+
 
 #---------- Authentication Scripts -------------------------------
 
