@@ -5,12 +5,13 @@
 // *********Description***********
 // Script asks for and adds the following items:
 // 1. Add a new Calculation Group for "Time Intelligence" Measures
-// 2. Adding a Date Dimension Table
+// 2. Adding a Date Dimension Table, the table is automatically marked as date table
 // 3. Adding an Empty Measure Table
 // 4. Adding a Last Refresh Table
 // 5. Formats the DAX of ALL calculation items in the model
 // 6. Adds Explicit Measures based on defined aggregation
 // 7. Adding a Calc Group for "Units"
+// 8. Checking for DiscourageImplicitMeasures and ask to set to true
 // Variables to fill in:
 //     - Calc Group Name,
 //     - Date Table Name
@@ -25,12 +26,14 @@ using System.Windows.Forms;
 // *********Variables to Modify from User if needed***********
 string tableNameEmptyMeasure = "Measure";
 string tableNameLastRefresh = "Last Refresh";
+string columnNameLastRefresh = "Last Refreshes";
+string LastRefreshMeasureName = "Last Refresh Measure";
 var TimeIntelligenceCalculationGroupName = "Time Intelligence";
 var CalcGroupUnitsName = "Units";
 
 string fiscalYearEndDate = "07/31";
 bool GenerateYTD = true;     
-bool GenerateFiscalYear = true;
+bool GenerateFiscalYear = false;
 
 // ***********************************************************
 bool addtables;
@@ -70,17 +73,25 @@ if (addtables)
     
     DialogResult dialogResult = MessageBox.Show(text:"Add Empty Measure table?", caption:"Empty Measure Table", buttons:MessageBoxButtons.YesNo);
     GenerateEmptyMeasureTable = (dialogResult == DialogResult.Yes);
-
-    DialogResult dialogResult1 = MessageBox.Show(text:"Add Last Refresh table?", caption:"Last Refresh Table", buttons:MessageBoxButtons.YesNo);
-    GenerateLastRefreshTable = (dialogResult1 == DialogResult.Yes); 
-
-    DialogResult dialogResult2 = MessageBox.Show(text:"Add Date Dimension table? Basis is a Power Query Script", caption:"Date Dimension Table", buttons:MessageBoxButtons.YesNo);
-    GenerateDateDimensionTable = (dialogResult2 == DialogResult.Yes); 
-
 }
+
+DialogResult dialogResult15 = MessageBox.Show(text:"Change the current aggregation to none for all columns ending with 'Key' or 'ID'?\n\n This is a best practice, but also helpful if you want to add explicit measures for all non key columns in a following step within this script.", caption:"Aggregation Key Columns", buttons:MessageBoxButtons.YesNo);
+bool KeyColumnsAggregation = (dialogResult15 == DialogResult.Yes); 
 
 DialogResult dialogResult13 = MessageBox.Show(text:"Add Explicit Measures based on current aggregation?\n\nMake sure to use the correct aggregation for all of your columns. \nProperty name to modify: Summarize By", caption:"Explicit Measure creation", buttons:MessageBoxButtons.YesNo);
 bool ExplicitMeasure = (dialogResult13 == DialogResult.Yes); 
+
+if (addtables)
+{
+    DialogResult dialogResult1 = MessageBox.Show(text:"Add Last Refresh table?", caption:"Last Refresh Table", buttons:MessageBoxButtons.YesNo);
+    GenerateLastRefreshTable = (dialogResult1 == DialogResult.Yes); 
+
+    DialogResult dialogResult2 = MessageBox.Show(text:"Add Date Dimension table? \n\nThe table is automatically marked as date table. \nBasis is a Power Query Script", caption:"Date Dimension Table", buttons:MessageBoxButtons.YesNo);
+    GenerateDateDimensionTable = (dialogResult2 == DialogResult.Yes); 
+}
+
+var Table = Interaction.InputBox("Provide the name of the date dimension table","Table Name","Calendar");
+var Column = Interaction.InputBox("Provide the name of the date column name","Column Name","Date");
 
 DialogResult dialogResult0 = MessageBox.Show(text:"Add Time Intelligence Calc Group?", caption:"Time Intelligence Calculation Group", buttons:MessageBoxButtons.YesNo);
 bool GenerateCalcGroupTimeInt = (dialogResult0 == DialogResult.Yes); 
@@ -97,8 +108,21 @@ bool FormatDAXCalcItems = (dialogResult5 == DialogResult.Yes);
 DialogResult dialogResult6 = MessageBox.Show(text:"Format ALL DAX measures", caption:"Format ALL measures", buttons:MessageBoxButtons.YesNo);
 bool FormatDAX = (dialogResult6 == DialogResult.Yes);
 
-var Table = Interaction.InputBox("Provide the name of the date dimension table","Table Name","Calendar");
-var Column = Interaction.InputBox("Provide the name of the date column name","Column Name","Date");
+
+if (!Model.DiscourageImplicitMeasures)
+{
+    // Show message box
+    DialogResult dialogResult14 = MessageBox.Show(
+        text: "Set DiscourageImplicitMeasures to true?\n\nThis is in general recommended and needed for calculation groups.", 
+        caption: "Discourage Implicit Measures", 
+        buttons: MessageBoxButtons.YesNo);
+
+    // If user clicks Yes, set DiscourageImplicitMeasures to true
+    if (dialogResult14 == DialogResult.Yes)
+    {
+        Model.DiscourageImplicitMeasures = true;
+    }
+}
 
 {
     DialogResult dialogResult11 = MessageBox.Show(text:
@@ -121,7 +145,8 @@ var Column = Interaction.InputBox("Provide the name of the date column name","Co
     "\n\nMeasures:"+
     "\n6. Create all Explicit Measures: "+ExplicitMeasure+
     "\n7. Format all Measures: "+FormatDAX+
-    "\n8. Format all Calculation Items: "+FormatDAXCalcItems
+    "\n8. Format all Calculation Items: "+FormatDAXCalcItems+
+    "\n9. Remove Aggregation for Key Columns"+KeyColumnsAggregation
     
     
     ,caption:"Summary of Selected Parameters", buttons:MessageBoxButtons.OKCancel);
@@ -130,7 +155,8 @@ if (dialogResult11 == DialogResult.Cancel)
         return; // Cancel the script
     }}
 
-// Script adds an empty measure table
+    
+// Adding an empty measure table *********************************************************** 
 if (GenerateEmptyMeasureTable)
     {
         try {
@@ -174,13 +200,29 @@ catch (Exception ex)
     }
 }
 
-// ***************************************************************************************************************
+
+// Change SummarizeBy to None for All ID and Key columns ***********************************************************
+if (KeyColumnsAggregation)
+{
+foreach (var table in Model.Tables)
+{
+    foreach (var column in table.Columns)
+    {
+        if (column.Name.EndsWith("Key") || column.Name.EndsWith("ID"))
+        {
+            column.SummarizeBy = AggregateFunction.None;
+        }
+    }
+}
+}
+
+// Create Explicit Measures for all tables for all columns with summarize by in the empty measure folder. ******************
 if (ExplicitMeasure)
    {
 // Title: Auto-create explicit measures from all columns in all tables that have qualifying aggregation functions assigned 
 // Author of this part: Tom Martens, twitter.com/tommartens68
-// Edited by: Alexander Korn (e.g. moving all measures to the empty measure table, hiding all columns)
-// 
+// Edited on 24/01/04 by: Alexander Korn (e.g. moving all measures to the empty measure table, creating one if has not been previously created, hiding all columns) 
+//  
 // This script, when executed, will loop through all the tables and creates explicit measure for all the columns with qualifying
 // aggregation functions.
 // The qualifying aggregation functions are SUM, COUNT, MIN, MAX, AVERAGE.
@@ -455,6 +497,10 @@ if (GenerateLastRefreshTable)
 // Script adds a Last Refresh Table:
 // Create a new table in the model
 Table table = Model.AddTable(tableNameLastRefresh);
+
+string measureDax = "\"Last Refresh: \" & MAX('" + tableNameLastRefresh + "'[" + columnNameLastRefresh + "])";
+
+
 // Add the "Column1" column to the table
 DataColumn column1 = table.AddDataColumn();
 column1.Name = "Column1";
@@ -469,19 +515,23 @@ if (!Model.Tables.Any(t => t.Name == tableNameLastRefresh))
 // Define the M expression
 string mExpression = @"
 let
-    #""Today"" = #table({""Last Refresh""}, {{DateTime.From(DateTime.LocalNow())}})
+#""Today"" = #table({""" + columnNameLastRefresh + @"""}, {{DateTime.From(DateTime.LocalNow())}})
 in
     #""Today"" ";
         // Update existing partition
         var partition = table.Partitions.First();
         partition.Expression = mExpression;
         partition.Mode = ModeType.Import; // Set the refresh policy to Import
-
+        
+  // Creates a last Refresh Measure ***********************
+  var table2 = Model.Tables[tableNameEmptyMeasure];
+  var measurelastrefresh = table2.AddMeasure(LastRefreshMeasureName, measureDax, "Meta");
 }
 catch (Exception ex)
 {MessageBox.Show("Adding the Last Refresh table was not successful but the rest of the script was completed\n\nReason: "+ex.Message);
     }
 }
+
 
 // Creates a Date Dimension table *******************************************************************************
 if (GenerateDateDimensionTable)
@@ -490,10 +540,12 @@ if (GenerateDateDimensionTable)
 // Script adds a Date Dimension Table:
 // Create a new table in the model
 Table table = Model.AddTable(Table);
+table.DataCategory = "Time";
 // Add columns with specified names and data types, including SourceColumn
 DataColumn dateColumn = table.AddDataColumn();
 dateColumn.Name = Column;
 dateColumn.DataType = DataType.DateTime;
+dateColumn.IsKey = true;
 dateColumn.SourceColumn = "Date";
 DataColumn yearColumn = table.AddDataColumn();
 yearColumn.Name = "Year";
@@ -606,7 +658,4 @@ catch (Exception ex)
 {MessageBox.Show("Adding the Date Dimension Table was not successful but the rest of the script was completed\n\nReason: "+ex.Message);
     }
 }
-
-
-
 
