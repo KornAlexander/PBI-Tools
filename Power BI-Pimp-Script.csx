@@ -2,17 +2,18 @@
 // Created on: 5. December 2023
 // Modified on 29. January 2024
 
+
 // *********Description***********
 // Script asks for and adds the following items:
 // 1. Add a new Calculation Group for "Time Intelligence" Measures
 // 2. Adding a Date Dimension Table, the table is automatically marked as date table
-// 2.1 Adding a Function for Date Dimension
+// 2.1 Adding a Function for Date Dimension, credit Lars Schreiber
 // 2.2 Adding a calc table for dimension
 // 3. Adding an Empty Measure Table
 // 4. Adding a Last Refresh Table
 // 5. Formats the DAX of ALL calculation items in the model
 // 6. All Key and ID columns: Set Summarize By to "None"
-// 7. Adds Explicit Measures based on defined aggregation
+// 7. Adds Explicit Measures based on defined aggregation, credit Thomas Martens
 // 8. Adding a Calc Group for "Units"
 // 9. Checking for DiscourageImplicitMeasures and ask to set to true
 // 10. Load BPA into TE - needs TE reopen
