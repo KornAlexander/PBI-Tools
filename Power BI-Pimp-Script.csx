@@ -6,6 +6,8 @@
 // Script asks for and adds the following items:
 // 1. Add a new Calculation Group for "Time Intelligence" Measures
 // 2. Adding a Date Dimension Table, the table is automatically marked as date table
+// 2.1 Adding a Function for Date Dimension
+// 2.2 Adding a calc table for dimension
 // 3. Adding an Empty Measure Table
 // 4. Adding a Last Refresh Table
 // 5. Formats the DAX of ALL calculation items in the model
@@ -29,8 +31,11 @@ using System.Windows.Forms;
 // Here you can modify the names
 string tableNameEmptyMeasure = "Measure";
 string tableNameLastRefresh = "Last Refresh";
+string calctableCalendar = "Calendar CalcTable";
 string columnNameLastRefresh = "Last Refreshes";
 string LastRefreshMeasureName = "Last Refresh Measure";
+var FromYear = "2018";
+var ToYear = "2024"; 
 var TimeIntelligenceCalculationGroupName = "Time Intelligence";
 var CalcGroupUnitsName = "Units";
 
@@ -47,6 +52,8 @@ bool addtables;
 bool GenerateEmptyMeasureTable = false;
 bool GenerateLastRefreshTable = false;
 bool GenerateDateDimensionTable = false;
+bool GenerateDateDimensionTable2 = false;
+bool GenerateDateDimensionTable3 = false;
 
 
 // Checking if adding tables is possible otherwise prompt user ****************
@@ -97,9 +104,16 @@ if (addtables)
     DialogResult dialogResult1 = MessageBox.Show(text:"Add Last Refresh table?\n\nThis also adds a measure which you can use in your report to display when the last refresh happend. \nThis simple approach does not work if you have incremental refresh / multiple partitions set up.", caption:"Last Refresh Table", buttons:MessageBoxButtons.YesNo);
     GenerateLastRefreshTable = (dialogResult1 == DialogResult.Yes); 
 
-    DialogResult dialogResult2 = MessageBox.Show(text:"Add Date Dimension table? \n\nThe table is automatically marked as date table. \nBasis is a Power Query Script", caption:"Date Dimension Table", buttons:MessageBoxButtons.YesNo);
+    DialogResult dialogResult2 = MessageBox.Show(text:"Add Date Dimension table? \n\nThe table is automatically marked as date table. \nBasis is a Power Query Script", caption:"PQ: Calendar Dimension ", buttons:MessageBoxButtons.YesNo);
     GenerateDateDimensionTable = (dialogResult2 == DialogResult.Yes); 
+    
+    DialogResult dialogResult20 = MessageBox.Show(text:"Add Lars Schreiber's function for a calendar dimension table? \n\nThis adds a function for an ultimate calendar dimension. Just go afterwards to your power query and fill in the parameters for your calendar table. \nDon't forget to mark the table as calendar table afterwards", caption:"Lars' PQ Function: Calendar Dimension", buttons:MessageBoxButtons.YesNo);
+    GenerateDateDimensionTable2 = (dialogResult20 == DialogResult.Yes); 
+    
 }
+
+    DialogResult dialogResult21 = MessageBox.Show(text:"Add Date Dimension with Calculated Table? \n\nThis adds a calculuated table for a date dimension. \n\nWARNING: If you have birthdates or similar very old dates in your data model than this calculated table will cause problems. Make sure to mark the table as calendar table afterwards", caption:"Calculated Table: Calendar Dimension", buttons:MessageBoxButtons.YesNo);
+    GenerateDateDimensionTable3 = (dialogResult21 == DialogResult.Yes);
 
 // Getting the names of the calendar table and date column, this is also run if adding tables is not possible, because it is needed for the time intelligence calc group ************
 var Table = Interaction.InputBox("Provide the name of the date dimension table","Table Name","Calendar");
@@ -151,6 +165,8 @@ if (!Model.DiscourageImplicitMeasures)
     "\n3. Create Date Dimension Table: "+GenerateDateDimensionTable+
     "\n  3.1 Date Dimension Table Name: '"+Table+"'"+
     "\n  3.2 Date Dimension Column Name: '"+Column+"'"+
+    "\n  3.3 CalendarFunction added: "+GenerateDateDimensionTable2+
+    "\n  3.4 Calendar Calc Table added: "+GenerateDateDimensionTable3+
     
     "\n\nCalculation Groups:"+
     "\n4. Time Intelligence Calc Group: "+GenerateCalcGroupTimeInt+
@@ -617,8 +633,8 @@ if (GenerateDateDimensionTable)
     let
         // configurations start
         Today=Date.From(DateTime.LocalNow()), // today's date
-        FromYear = 2018, // set the start year of the date dimension. dates start from 1st of January of this year
-        ToYear=2025, // set the end year of the date dimension. dates end at 31st of December of this year
+        FromYear =" + FromYear + @", // set the start year of the date dimension. dates start from 1st of January of this year
+        ToYear=" + ToYear + @", // set the end year of the date dimension. dates end at 31st of December of this year
         StartofFiscalYear=7, // set the month number that is start of the financial year. example; if fiscal year start is July, value is 7
         firstDayofWeek=Day.Monday, // set the week's start day, values: Day.Monday, Day.Sunday....
         // configuration end
@@ -674,6 +690,7 @@ if (GenerateDateDimensionTable)
     in
         #""Renamed Columns2"" ";
 
+
     // Update existing partition
     var partition = table.Partitions.First();
     partition.Expression = mExpression;
@@ -693,4 +710,299 @@ string path = System.Environment.GetFolderPath(System.Environment.SpecialFolder.
 string url = "https://raw.githubusercontent.com/microsoft/Analysis-Services/master/BestPracticeRules/BPARules.json";
 string downloadLoc = path+@"\TabularEditor\BPARules.json";
 w.DownloadFile(url, downloadLoc);
+}
+
+if (GenerateDateDimensionTable3)
+{// Define the name of the calculated table
+    string tableName = calctableCalendar;
+
+// Define the DAX expression for the calculated table
+string tableExpression = @"
+VAR all_dates = CALENDARAUTO()
+RETURN
+    ADDCOLUMNS(
+        all_dates,
+        ""Year"", YEAR([Date]),
+        ""Quarter"", QUARTER([Date]),
+        ""Month"", MONTH([Date]),
+        ""End of Month"", EOMONTH([Date], 0),
+        ""Week of Year"", WEEKNUM([Date]),
+        ""Weekday"", WEEKDAY([Date])
+    )
+";
+
+// Add the calculated table to the model
+var table = Model.AddCalculatedTable(tableName, tableExpression);
+
+}
+
+
+if (GenerateDateDimensionTable2)
+{
+    try
+    {
+        // Define the name of the table
+        string expressionName = "CalendarFunction";
+
+        // Check if the table with the name 'CalendarFunction' already exists in the model
+        if (Model.Expressions.Any(e => e.Name == expressionName))
+        {
+            throw new InvalidOperationException("Function already exists in the model.");
+        }
+
+
+
+        
+        // Define the M expression as a string - Replace this with your actual Power Query M script
+        string mExpression = @"
+let
+    
+fn = (StartYear, YearsIntoFuture, optional Culture, optional StartFiscalYear, optional WeekStart) =>
+
+let
+/*
+YearsIntoFuture = 2,
+StartYear = 2017, 
+Culture = ""de-de"", 
+StartFiscalYear = ""Feb"",
+WeekStart = ""Tue"", 
+*/
+    Today = Date.From(DateTime.LocalNow()),
+    EndYear = Date.Year(Date.From(DateTime.LocalNow())) + YearsIntoFuture, 
+    StartFiscYear = if StartFiscalYear = null then ""Jan"" else StartFiscalYear,
+    GetStartDay = if StartFiscYear = ""Jan"" then #date(StartYear,1,1) else Date.FromText(""01.""&StartFiscYear &Number.ToText(StartYear)),
+    GetEndDay = if StartFiscYear = ""Jan"" then #date(EndYear,12,31) else Date.EndOfMonth( Date.AddMonths( Date.AddYears( Date.FromText(""01.""&StartFiscYear &Number.ToText(EndYear)), 1), -1) ),
+    GetCultureDefaultGermany = if Culture = null then ""de-de"" else Culture, 
+    DayCount = Duration.Days(Duration.From(GetEndDay - GetStartDay)) + 1, 
+    GetListOfDates = List.Dates(GetStartDay,DayCount,#duration(1,0,0,0)), 
+    TableFromList = Table.FromList(GetListOfDates, Splitter.SplitByNothing()),    
+    ChangedType = Table.TransformColumnTypes(TableFromList,{{""Column1"", type date}}), 
+    Date = Table.Buffer( Table.RenameColumns(ChangedType,{{""Column1"", ""Date""}}) ),
+    #""AddFull date Description"" = Table.AddColumn(Date, ""Full Date Description"", each Date.ToText([Date], ""dd. MMMM yyyy"", Culture), type text),
+    
+    //================================================
+    DetermineWeekStart = 
+        if WeekStart = null then 
+          1 
+        else  
+            List.Select( {
+              [Day=""Mo"", WeekStart= Day.Monday],
+              [Day=""Tu"", WeekStart= Day.Tuesday],
+              [Day=""We"", WeekStart= Day.Wednesday],
+              [Day=""Th"", WeekStart= Day.Thursday],
+              [Day=""Fr"", WeekStart= Day.Friday],
+              [Day=""Sa"", WeekStart= Day.Saturday],
+              [Day=""Su"", WeekStart= Day.Sunday]
+              }, each _[Day] = WeekStart ){0}[WeekStart] ,
+    //================================================
+    
+    AddWeekDaySort = Table.AddColumn(#""AddFull date Description"", ""Day of Week #"", each Date.DayOfWeek([Date], DetermineWeekStart) + 1, Int64.Type),
+    AddMonthDaySort = Table.AddColumn(AddWeekDaySort, ""Day of Month #"", each Date.Day([Date]), Int64.Type),
+    #""Day of Year added"" = Table.AddColumn(AddMonthDaySort, ""Day of Year #"", each Date.DayOfYear([Date]), Int64.Type),
+    AddDayKey = Table.AddIndexColumn(#""Day of Year added"", ""DayKey #"", 1, 1, Int64.Type),
+    AddDayName = Table.AddColumn(AddDayKey, ""Name of the Day (DDDD)"", each Date.DayOfWeekName([Date], Culture), type text),
+    AddDaysName2digits = Table.AddColumn(AddDayName, ""Name of the Day (DD)"", each Date.ToText([Date],""ddd"", Culture), type text),
+    AddDaysName1digit = Table.AddColumn(AddDaysName2digits, ""Name of the Day (D)"", each Text.Start(Date.DayOfWeekName([Date], Culture),1) & Text.Repeat(Character.FromNumber(8203), [#""Day of Week #""]), type text),
+    WT_WE_flag = Table.AddColumn(AddDaysName1digit, ""Weekday_Flag"", each if [#""Day of Week #""] < 6 then ""Weekday"" else ""Weekend"", type text),
+    AddWeekOfYear = Table.AddColumn(WT_WE_flag, ""Week #"", each Date.WeekOfYear([Date]), Int64.Type),
+    #""Week Start added"" = Table.AddColumn(AddWeekOfYear, ""Week Start"", each Date.StartOfWeek([Date]), type date),
+    #""Weekend added"" = Table.AddColumn(#""Week Start added"", ""Week End"", each Date.EndOfWeek([Date]), type date),
+    AddYearWeek = Table.AddColumn(#""Weekend added"", ""YearWeek #"", each Date.Year([Date])*100+[#""Week #""], Int64.Type),
+    TableWeekKey = /*List.Distinct(#""Changed Type4""[YearWeek])*/ Table.AddIndexColumn(Table.TransformColumnTypes(Table.RenameColumns(Table.FromList(List.Sort(List.Distinct(AddYearWeek[#""YearWeek #""]),Order.Ascending), Splitter.SplitByNothing(), null, null, ExtraValues.Error),{{""Column1"", ""YearWeek""}}),{{""YearWeek"", Int64.Type}}), ""WeekKey #"", 1, 1),
+    AddWeekKey = Table.NestedJoin(AddYearWeek,{""YearWeek #""},TableWeekKey,{""YearWeek""},""WK"",JoinKind.LeftOuter),
+    #""Expanded WK"" = Table.ExpandTableColumn(AddWeekKey, ""WK"", {""WeekKey #""}, {""WeekKey #""}),
+    RemovedYearWeek = Table.RemoveColumns(#""Expanded WK"",{""YearWeek #""}),
+    AddKW_Year = Table.AddColumn(RemovedYearWeek, ""Week Year"", each ""KW""&Text.PadStart(Number.ToText([#""Week #""]),2,""0"") &"" ""&Number.ToText(Date.Year([Date])), type text),
+    AddYear_KW = Table.AddColumn(AddKW_Year, ""Year Week"", each Number.ToText(Date.Year([Date])) &"" ""&""KW""&Text.PadStart(Number.ToText([#""Week #""]),2,""0""), type text),
+    fnGetIsoWeekNumber = (MyDate as date) =>
+      //Source --> https://blogs.office.com/en-us/2009/06/30/week-numbers-in-excel/
+    let
+      //MyDate = #date(2016,1,3),
+      Part1 = Number.From(MyDate) - Number.From(#date(Date.Year(Date.From(Number.From(MyDate) - (Date.DayOfWeek(Date.AddDays(MyDate,-1), Day.Sunday) + 1) + 4)),1,3)),
+      Part2 = Date.DayOfWeek(#date(Date.Year(Date.From(Number.From(MyDate) - (Date.DayOfWeek(Date.AddDays(MyDate,-1), Day.Sunday) +1) + 4)),1,3), Day.Sunday)+1 + 5,
+      ISOWeekNumber = Number.IntegerDivide(Part1 + Part2, 7)
+    in
+      ISOWeekNumber,
+    AddIsoWeek = Table.AddColumn(AddYear_KW, ""IsoKW #"", each fnGetIsoWeekNumber([Date]), Int64.Type),
+    AddIsoYear = Table.AddColumn(AddIsoWeek,""IsoYear #"",each Date.Year(Date.AddDays([Date],3 - Date.DayOfWeek([Date], 1))), Int64.Type),
+    AddIsoYear_IsoKW = Table.AddColumn(AddIsoYear, ""IsoYear IsoKW"", each Text.From([#""IsoYear #""]) &  "" KW"" & Text.PadStart(Text.From([#""IsoKW #""]),2,""0"") , type text),
+    AddIsoKW_IsoYear = Table.AddColumn(AddIsoYear_IsoKW, ""IsoKW IsoYear"", each ""KW"" & Text.PadStart(Text.From([#""IsoKW #""]),2,""0"") &"" ""&Text.From([#""IsoYear #""]), type text),
+    GetIsoCalendarWeekKey = Table.AddIndexColumn( Table.Distinct( Table.SelectColumns(AddIsoKW_IsoYear, {""IsoYear IsoKW""}), {""IsoYear IsoKW""}), ""IsoKWKey #"", 1, 1),
+    AddIsoCalendarWeekKey = Table.AddJoinColumn(AddIsoKW_IsoYear, {""IsoYear IsoKW""}, GetIsoCalendarWeekKey, {""IsoYear IsoKW""}, ""NEW""),
+    ExpandIsoCalendarWeekKey = Table.ExpandTableColumn(AddIsoCalendarWeekKey, ""NEW"", {""IsoKWKey #""}, {""IsoKWKey #""}),
+    AddMonthSort = Table.AddColumn(ExpandIsoCalendarWeekKey, ""Month #"", each Date.Month([Date]), Int64.Type),
+    AddMonthName = Table.AddColumn(AddMonthSort, ""Month (MMMM)"", each Date.MonthName([Date], Culture), type text),
+    AddMonthName3digits = Table.AddColumn(AddMonthName, ""Month (MMM)"", each Date.ToText([Date], ""MMM"", Culture), type text),
+    AddMonthName1digit = Table.AddColumn(AddMonthName3digits, ""Month (M)"", each Text.Start(Date.MonthName([Date], Culture),1) & Text.Repeat(Character.FromNumber(8203), [#""Month #""]), type text),
+    AddMonthNameShort_Year = Table.AddColumn(AddMonthName1digit, ""Month (MMM) Year"", each [#""Month (MMM)""] &"" ""& Number.ToText(Date.Year([Date])), type text),
+#""Add Year Month (MMM)"" = Table.AddColumn(AddMonthNameShort_Year, ""Year Month (MMM)"", each Number.ToText(Date.Year([Date])) &"" ""&[#""Month (MMM)""], type text),
+AddYearMonth = Table.TransformColumnTypes(Table.AddColumn(#""Add Year Month (MMM)"", ""YearMonth #"", each Date.Year([Date])*100 + [#""Month #""]),{{""YearMonth #"", Int64.Type}}),
+TableYearMonth = Table.AddIndexColumn(Table.TransformColumnTypes(Table.RenameColumns(Table.FromList(List.Sort(List.Distinct(AddYearMonth[#""YearMonth #""]),Order.Ascending), Splitter.SplitByNothing(), null, null, ExtraValues.Error),{{""Column1"", ""YearMonth""}}),{{""YearMonth"", Int64.Type}}), ""YearMonthKey"", 1, 1),
+#""Merged Queries"" = Table.NestedJoin(AddYearMonth,{""YearMonth #""},TableYearMonth,{""YearMonth""},""MK"",JoinKind.LeftOuter),
+#""Expanded MK"" = Table.ExpandTableColumn(#""Merged Queries"", ""MK"", {""YearMonthKey""}, {""MonthKey #""}),
+#""Removed Columns1"" = Table.RemoveColumns(#""Expanded MK"",{""YearMonth #""}),
+AddSoM = Table.AddColumn(#""Removed Columns1"", ""StartOfMonth"", each Date.StartOfMonth([Date]), type date),
+AddEoM = Table.AddColumn(AddSoM, ""EndOfMonth"", each Date.EndOfMonth([Date]), type date),
+AddQuarter = Table.AddColumn(AddEoM, ""Quarter #"", each Date.QuarterOfYear([Date]), Int64.Type),
+AddQuarterName = Table.AddColumn(AddQuarter, ""Quarter"", each ""Q"" & Number.ToText([#""Quarter #""]), type text),
+AddQuarter_Year = Table.AddColumn(AddQuarterName, ""Quarter Year"", each ""Q""&Number.ToText([#""Quarter #""]) &""-""&Number.ToText(Date.Year([Date])), type text),
+AddYear_Quarter = Table.AddColumn(AddQuarter_Year, ""Year Quarter"", each Number.ToText(Date.Year([Date])) & ""-Q"" & Number.ToText([#""Quarter #""]), type text),
+AddYearQuarter = Table.AddColumn(AddYear_Quarter, ""Year Quarter #"", each Date.Year([Date]) * 100 + [#""Quarter #""], Int64.Type),
+TableYearQuarter = Table.AddIndexColumn(Table.TransformColumnTypes(Table.RenameColumns(Table.FromList(List.Sort(List.Distinct(#""AddYearQuarter""[#""Year Quarter #""]),Order.Ascending), Splitter.SplitByNothing(), null, null, ExtraValues.Error),{{""Column1"", ""YearQuarter""}}),{{""YearQuarter"", Int64.Type}}), ""QuarterKey"", 1, 1),
+GetQuarterKey = Table.NestedJoin(AddYearQuarter,{""Year Quarter #""},TableYearQuarter,{""YearQuarter""},""QK"",JoinKind.LeftOuter),
+AddQuarterKey = Table.ExpandTableColumn(GetQuarterKey, ""QK"", {""QuarterKey""}, {""QuarterKey #""}),
+#""Removed Columns"" = Table.RemoveColumns(AddQuarterKey,{""Year Quarter #""}),
+AddHalfYearSort = Table.TransformColumnTypes(Table.AddColumn(#""Removed Columns"", ""HalfYear #"", each if Date.Month([Date]) < 7 then 1 else 2),{{""HalfYear #"", Int64.Type}}),
+AddHalfYearName = Table.AddColumn(AddHalfYearSort, ""HalfYear"", each ""HJ "" & Number.ToText([#""HalfYear #""]), type text),
+AddHalfYear_Year = Table.AddColumn(AddHalfYearName, ""HalfYear Year"", each ""HJ ""&Number.ToText([#""HalfYear #""])&""-""&Number.ToText(Date.Year([Date])), type text),
+#""Added Custom Column3"" = Table.AddColumn(AddHalfYear_Year, ""Year HalfYear"", each Number.ToText(Date.Year([Date]))&""-""& ""HJ ""&Number.ToText([#""HalfYear #""]), type text),
+AddYearHalfYear = Table.TransformColumnTypes(Table.AddColumn(#""Added Custom Column3"", ""YearHalfYear #"", each Date.Year([Date])*100+[#""HalfYear #""]),{{""YearHalfYear #"", Int64.Type}}),
+TableYearHalfYear = Table.AddIndexColumn(Table.TransformColumnTypes(Table.RenameColumns(Table.FromList(List.Sort(List.Distinct(AddYearHalfYear[#""YearHalfYear #""]),Order.Ascending), Splitter.SplitByNothing(), null, null, ExtraValues.Error),{{""Column1"", ""YearHalfYear""}}),{{""YearHalfYear"", Int64.Type}}), ""HalfYearKey"", 1, 1),
+GetHalfYearKey = Table.NestedJoin(AddYearHalfYear,{""YearHalfYear #""},TableYearHalfYear,{""YearHalfYear""},""HYK"",JoinKind.LeftOuter),
+AddHalfYearKey = Table.ExpandTableColumn(GetHalfYearKey, ""HYK"", {""HalfYearKey""}, {""HalfYearKey #""}),
+#""Removed Columns4"" = Table.RemoveColumns(AddHalfYearKey,{""YearHalfYear #""}),
+AddYear = Table.AddColumn(#""Removed Columns4"", ""Year #"", each Date.Year([Date]), Int64.Type),
+AddYearKey = Table.AddColumn(AddYear, ""YearKey #"", each [#""Year #""] - List.Min(AddYear[#""Year #""]) + 1, Int64.Type),
+IsLeapYear = Table.Buffer( Table.TransformColumnTypes(Table.AddColumn(AddYearKey, ""LeapYear"", each Number.From( Date.IsLeapYear( [Date] ))),{{""LeapYear"", Int64.Type}}) ),
+
+fnKeysTodayRecord =
+  let
+  FilterTableToToday = Table.SelectRows(IsLeapYear, each _[Date] = Today),
+  Output = 
+    [
+      TodayDayKey = FilterTableToToday[#""DayKey #""]{0}, 
+      TodayWeekKey = FilterTableToToday[#""WeekKey #""]{0},
+      TodayIsoWeekKey = FilterTableToToday[#""IsoKW #""]{0},
+      TodayMonthKey = FilterTableToToday[#""MonthKey #""]{0},
+      TodayQuarterKey = FilterTableToToday[#""QuarterKey #""]{0},
+      TodayHalfYearKey = FilterTableToToday[#""HalfYearKey #""]{0},
+      TodayYearKey = FilterTableToToday[#""YearKey #""]{0}
+    ]
+  in
+  Output, 
+AddRelativeDay = Table.AddColumn(IsLeapYear, ""Relative Day #"", each [#""DayKey #""] - fnKeysTodayRecord[TodayDayKey], Int64.Type),
+AddRelativeWeek = Table.AddColumn(AddRelativeDay, ""Relative Week #"", each [#""WeekKey #""] - fnKeysTodayRecord[TodayWeekKey], Int64.Type),
+AddRelativeIsoWeek = Table.AddColumn(AddRelativeWeek, ""Relative IsoWeek #"", each [#""IsoKW #""] - fnKeysTodayRecord[TodayIsoWeekKey], Int64.Type),
+AddRelativeMonth = Table.AddColumn(AddRelativeIsoWeek, ""Relative Month #"", each [#""MonthKey #""] - fnKeysTodayRecord[TodayMonthKey], Int64.Type),
+AddRelativeQuarter = Table.AddColumn(AddRelativeMonth, ""Relative Quarter #"", each [#""QuarterKey #""] - fnKeysTodayRecord[TodayQuarterKey], Int64.Type),
+AddRelativeHalfYear = Table.AddColumn(AddRelativeQuarter, ""Relative HalfYear #"", each [#""HalfYearKey #""] - fnKeysTodayRecord[TodayHalfYearKey], Int64.Type),
+AddRelativeYear = Table.AddColumn(AddRelativeHalfYear, ""Relative Year #"", each [#""YearKey #""] - fnKeysTodayRecord[TodayYearKey], Int64.Type),
+
+//2Go-Detection
+ListGetWeek2Go = List.Buffer( Table.SelectRows(AddRelativeYear, each [#""Relative Week #""] = 0 and [Date] > Today)[Date] ),
+ListGetIsoWeek2Go = List.Buffer( Table.SelectRows(AddRelativeYear, each [#""Relative IsoWeek #""] = 0 and [Date] > Today)[Date] ),
+ListGetMonth2Go = List.Buffer( Table.SelectRows(AddRelativeYear, each [#""Relative Month #""] = 0 and [Date] > Today)[Date] ),
+ListGetQuarter2Go = List.Buffer( Table.SelectRows(AddRelativeYear, each [#""Relative Quarter #""] = 0 and [Date] > Today)[Date] ),
+ListGetHalfYear2Go = List.Buffer( Table.SelectRows(AddRelativeYear, each [#""Relative HalfYear #""] = 0 and [Date] > Today)[Date] ),
+ListGetYear2Go = List.Buffer( Table.SelectRows(AddRelativeYear, each [#""Relative Year #""] = 0 and [Date] > Today)[Date] ),
+
+AddCol_Week2Go = Table.AddColumn( AddRelativeYear, ""Week 2 Go"", each Number.From( List.Contains(ListGetWeek2Go, [Date]) ), Int64.Type),
+AddCol_IsoWeek2Go = Table.AddColumn( AddCol_Week2Go, ""IsoWeek 2 Go"", each Number.From( List.Contains(ListGetIsoWeek2Go, [Date]) ), Int64.Type),
+AddCol_Month2Go = Table.AddColumn( AddCol_IsoWeek2Go, ""Month 2 Go"", each Number.From( List.Contains(ListGetMonth2Go, [Date]) ), Int64.Type),
+AddCol_Quarter2Go = Table.AddColumn(AddCol_Month2Go, ""Quarter 2 Go"", each Number.From(List.Contains(ListGetQuarter2Go, [Date])), Int64.Type),
+AddCol_HalfYear2Go = Table.AddColumn(AddCol_Quarter2Go, ""Half Year 2 Go"", each Number.From(List.Contains(ListGetHalfYear2Go, [Date])), Int64.Type),
+AddCol_Year2Go = Table.AddColumn(AddCol_HalfYear2Go, ""Year 2 Go"", each Number.From(List.Contains(ListGetYear2Go, [Date])), Int64.Type),
+//==============================================================================Fiscal Year Calculations=================================================================
+GetStartMonthNumberFiscalYear = List.PositionOf({""Jan"", ""Feb"", ""Mar"", ""Apr"", ""May"", ""Jun"", ""Jul"", ""Aug"", ""Sep"", ""Oct"", ""Nov"", ""Dec""}, StartFiscalYear) + 1,
+
+AddFiscalYear = Table.AddColumn(AddCol_Year2Go, ""Fiscal Year #"", each if Date.Month([Date]) < GetStartMonthNumberFiscalYear then Date.Year([Date]) else Date.Year([Date]) + 1, Int64.Type),
+#""Added Custom Column"" = Table.AddColumn(AddFiscalYear, ""Fiscal Year"", each if Date.Month([Date]) < GetStartMonthNumberFiscalYear then ""FY "" & Number.ToText(Date.Year([Date])) else ""FY "" & Number.ToText(Date.Year([Date]) + 1), type text),
+#""AddFiscalMonth#"" = Table.AddColumn(#""Added Custom Column"", ""Fiscal Month #"", each if (Date.Month([Date]) >= GetStartMonthNumberFiscalYear) then Date.Month([Date]) - GetStartMonthNumberFiscalYear +1 
+else 
+Date.Month([Date])+13-GetStartMonthNumberFiscalYear, Int64.Type),
+AddFiscalMonth_MMMM = Table.AddColumn(#""AddFiscalMonth#"", ""Fiscal Month (MMMM)"", each Date.MonthName([Date]), type text),
+Add_FiscalMonth_MMM = Table.AddColumn(AddFiscalMonth_MMMM, ""Fiscal Month (MMM)"", each Date.ToText([Date], ""MMM"", Culture), type text),
+AddFiscalMonth_MM = Table.AddColumn(Add_FiscalMonth_MMM, ""Fiscal Month (M)"", each Text.Start(Date.MonthName([Date], Culture),1) & Text.Repeat(Character.FromNumber(8203), [#""Month #""]), type text),
+Add_FiscalQuarter = Table.TransformColumnTypes(Table.AddColumn(AddFiscalMonth_MM, ""Fiscal Quarter #"", each Number.RoundUp([#""Fiscal Month #""]/3, 0)), {{""Fiscal Quarter #"", Int64.Type}}),
+#""Added Custom Column1"" = Table.AddColumn(Add_FiscalQuarter, ""Fiscal Quarter"", each ""FQ "" & Number.ToText([#""Fiscal Quarter #""]), type text),
+#""Added Custom Column2"" = Table.AddColumn(#""Added Custom Column1"", ""Fiscal Quarter Fiscal Year"", each [Fiscal Quarter]&""-FY ""&Number.ToText([#""Fiscal Year #""]), type text),
+AddFiscalYearQuarterName = Table.AddColumn(#""Added Custom Column2"", ""Fiscal Year Fiscal Quarter"", each ""FY ""&Text.From([#""Fiscal Year #""]) &""-FQ"" & Text.From([#""Fiscal Quarter #""]), type text),
+AddFiscalYearQuarter = Table.AddColumn(AddFiscalYearQuarterName, ""Fiscal_YearQuarter"", each [#""Fiscal Year #""] * 100 + [#""Fiscal Quarter #""], Int64.Type),
+TableFiscalYearQuarter = Table.AddIndexColumn(Table.TransformColumnTypes(Table.RenameColumns(Table.FromList(List.Sort(List.Distinct(#""AddFiscalYearQuarter""[#""Fiscal_YearQuarter""]), Order.Ascending), Splitter.SplitByNothing(), null, null, ExtraValues.Error), {{""Column1"", ""Fiscal_YearQuarter""}}), {{""Fiscal_YearQuarter"", Int64.Type}}), ""Fiscal_QuarterKey"", 1, 1),
+GetFiscalYearQuarterKey = Table.NestedJoin(AddFiscalYearQuarter,{""Fiscal_YearQuarter""},TableFiscalYearQuarter,{""Fiscal_YearQuarter""},""FYQ"",JoinKind.LeftOuter),
+#""Expanded FYQ"" = Table.ExpandTableColumn(GetFiscalYearQuarterKey, ""FYQ"", {""Fiscal_QuarterKey""}, {""FiscalQuarterKey #""}),
+#""Removed Columns2"" = Table.RemoveColumns(#""Expanded FYQ"",{""Fiscal_YearQuarter""}),
+AddFiscalHalfYear = Table.TransformColumnTypes(Table.AddColumn(#""Removed Columns2"", ""Fiscal Half Year #"", each if [#""Fiscal Month #""] < 7 then 1 else 2), {{""Fiscal Half Year #"", Int64.Type}}),
+AddFiscalHalfYearName = Table.AddColumn(AddFiscalHalfYear, ""Fiscal Half Year"", each ""FHY "" & Number.ToText([#""Fiscal Half Year #""]), type text),
+AddFiscalYearHalfYearName = Table.AddColumn(AddFiscalHalfYearName, ""Fiscal Year Fiscal Half Year"", each ""FY "" &Text.From([#""Fiscal Year #""]) & ""-FHY"" & Text.From([#""Fiscal Half Year #""]), type text),
+#""Added Custom Column4"" = Table.AddColumn(AddFiscalYearHalfYearName, ""Fiscal Half Year Fiscal Year"", each ""FHY "" & Text.From([#""Fiscal Half Year #""])&""-FY "" &Text.From([#""Fiscal Year #""]), type text),
+AddFiscalYearHalfYear = Table.AddColumn(#""Added Custom Column4"", ""Fiscal_YearHalfYear"", each [#""Fiscal Year #""] * 100 + [#""Fiscal Half Year #""], Int64.Type),
+TableFiscalYearHalfYear = Table.AddIndexColumn(Table.TransformColumnTypes(Table.RenameColumns(Table.FromList(List.Sort(List.Distinct(#""AddFiscalYearHalfYear""[Fiscal_YearHalfYear]),Order.Ascending), Splitter.SplitByNothing(), null, null, ExtraValues.Error),{{""Column1"", ""Fiscal_YearHalfYear""}}),{{""Fiscal_YearHalfYear"", Int64.Type}}), ""Fiscal_HalfYearKey"", 1, 1),
+GetFiscalYearHalfYearKey = Table.NestedJoin(AddFiscalYearHalfYear,{""Fiscal_YearHalfYear""},TableFiscalYearHalfYear,{""Fiscal_YearHalfYear""},""FYHY"",JoinKind.LeftOuter),
+#""Expanded FYHY"" = Table.ExpandTableColumn(GetFiscalYearHalfYearKey, ""FYHY"", {""Fiscal_HalfYearKey""}, {""FiscalHalfYearKey #""}),
+AddFiscalYearKey = Table.AddColumn(#""Expanded FYHY"", ""FiscalYearKey #"", each [#""Fiscal Year #""] - List.Min(#""Expanded FYHY""[#""Fiscal Year #""]) + 1, Int64.Type),
+#""Removed Columns3"" = Table.RemoveColumns(AddFiscalYearKey,{""Fiscal_YearHalfYear""}),
+
+
+fnKeysTodayRecordFiscal =
+      let
+      TableFilterToday = Table.SelectRows(#""Removed Columns3"", each _[Date] = Today),
+      Output = 
+        [
+          FiscalQuarterKeyToday = TableFilterToday[#""FiscalQuarterKey #""]{0},
+          FiscalHalfYearKeyToday = TableFilterToday[#""FiscalHalfYearKey #""]{0},
+          FiscalYearKeyToday = TableFilterToday[#""FiscalYearKey #""]{0}
+        ]
+      in
+      Output,
+
+  //Relative Fiscal Units
+   AddRelativeFiscalQuarter = Table.AddColumn(#""Removed Columns3"", ""Relative Fiscal Quarter #"", each [#""FiscalQuarterKey #""] - fnKeysTodayRecordFiscal[FiscalQuarterKeyToday], Int64.Type),
+    AddRelativeFiscalHalfYear = Table.AddColumn(AddRelativeFiscalQuarter, ""Relative Fiscal Half Year #"", each [#""FiscalHalfYearKey #""] - fnKeysTodayRecordFiscal[FiscalHalfYearKeyToday], Int64.Type),
+    AddRelativeFiscalYear = Table.AddColumn(AddRelativeFiscalHalfYear, ""Relative Fiscal Year #"", each [#""FiscalYearKey #""] - fnKeysTodayRecordFiscal[FiscalYearKeyToday], Int64.Type),
+
+    //2Go-Determination
+    ListGetFiscalQuarter2Go = List.Buffer(Table.SelectRows(AddRelativeFiscalYear, each [#""Relative Fiscal Quarter #""] = 0 and [Date] > Today)[Date]),
+    ListGetFiscalHalfYear2Go = List.Buffer(Table.SelectRows(AddRelativeFiscalYear, each [#""Relative Fiscal Half Year #""] = 0 and [Date] > Today)[Date]),
+    ListGetFiscalYear2Go = List.Buffer(Table.SelectRows(AddRelativeFiscalYear, each [#""Relative Fiscal Year #""] = 0 and [Date] > Today)[Date]),
+
+    AddCol_FiscalQuarter2Go = Table.AddColumn(AddRelativeFiscalYear, ""Fiscal Quarter 2 Go"", each Number.From(List.Contains(ListGetFiscalQuarter2Go, [Date])), Int64.Type),
+    AddCol_FiscalHalfYear2Go = Table.AddColumn(AddCol_FiscalQuarter2Go, ""Fiscal Half Year 2 Go"", each Number.From(List.Contains(ListGetFiscalHalfYear2Go, [Date])), Int64.Type),
+    AddCol_FiscalYear2Go = Table.AddColumn(AddCol_FiscalHalfYear2Go, ""Fiscal Year 2 Go"", each Number.From(List.Contains(ListGetFiscalYear2Go, [Date])), Int64.Type),
+
+    //==============================================================================Fiscal Year Calculations=================================================================
+    Output = if StartFiscalYear = ""Jan"" then AddCol_Year2Go else AddCol_FiscalYear2Go
+in
+    Output
+
+  ,
+    fnType = type function(
+              StartYear as number,
+              YearsIntoTheFuture as number, 
+              optional Culture as (type text meta [Documentation.AllowedValues={""de-de"", ""en-US"", ""fr-FR"", ""es-ES""}]), 
+              optional StartFiscalYear as (type text meta[Documentation.AllowedValues={""Jan"", ""Feb"", ""Mar"", ""Apr"", ""May"", ""Jun"", ""Jul"", ""Aug"", ""Sep"", ""Oct"", ""Nov"", ""Dec""}]),
+              optional WeekStart as (type text meta[Documentation.AllowedValues={""Mo"", ""Tu"", ""We"", ""Th"", ""Fr"", ""Sa"", ""Su""}])
+               ) as table meta [
+                                Documentation.Name=""fnCalendar (by Lars Schreiber --> ssbi-blog.de)"",
+                                Documentation.LongDescription=""This function creates a calendar table, based on the suggestions of the Kimball Group."",
+                                Documentation.Author=""Lars Schreiber, ssbi-blog.de"",
+                                Documentation.Examples=
+                                    {[
+                                        Description = ""Returns a calendar table starting in 2019 and automatically expanding by one year into the future from the current year."",
+                                        Code = ""fnCalendar(2019, 1, null, null, null)"",
+                                        Result =""""
+                                        
+                                    ],[
+                                        Description = ""Returns a calendar table starting in 2019 and automatically expanding by one year into the future from the current year. It includes additional columns that follow the logic of a fiscal year that starts in July and ends in June of the following year."",
+                                        Code = ""fnCalendar(2019, 1, null, Jul, null)"",
+                                        Result =""""
+                                        
+                                    ]} 
+                                ]
+in
+Value.ReplaceType(fn, fnType)";
+
+
+        // Create a new table in the model
+        NamedExpression Namedexpression = Model.AddExpression(expressionName, mExpression);
+        Namedexpression.Expression = mExpression;
+
+        Namedexpression.Kind = ExpressionKind.M;
+
+
+    }
+    catch (Exception ex)
+    {
+        MessageBox.Show("Adding the DateFunction table was not successful but the rest of the script was completed.\n\nReason: {ex.Message}");
+    }
 }
