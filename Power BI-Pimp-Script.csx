@@ -999,11 +999,9 @@ Value.ReplaceType(fn, fnType)";
         Namedexpression.Expression = mExpression;
 
         Namedexpression.Kind = ExpressionKind.M;
-
-
     }
     catch (Exception ex)
     {
-        MessageBox.Show("Adding the DateFunction table was not successful but the rest of the script was completed.\n\nReason: {ex.Message}");
+        MessageBox.Show($"Adding the DateFunction table was not successful but the rest of the script was completed.\n\nReason: { ex.Message }");
     }
 }
