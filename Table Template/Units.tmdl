@@ -1,0 +1,23 @@
+table Units
+	lineageTag: 040c3e24-f25c-462f-8ced-7eb10d3d04da
+
+	calculationGroup
+
+		calculationItem number = SELECTEDMEASURE ()
+
+		calculationItem k = DIVIDE ( SELECTEDMEASURE (), 1000 )
+
+		calculationItem mio = DIVIDE ( SELECTEDMEASURE (), 1000000 )
+
+	column Units
+		dataType: string
+		lineageTag: e80a81bb-dbbe-4eda-9eac-85bcb8081e83
+		sourceColumn: Name
+		sortByColumn: Ordinal
+
+	column Ordinal
+		dataType: int64
+		isHidden
+		lineageTag: f51b596a-7d2b-4b34-be58-4a59a64bc849
+		sourceColumn: Ordinal
+

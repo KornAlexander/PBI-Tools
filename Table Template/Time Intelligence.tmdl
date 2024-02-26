@@ -1,0 +1,266 @@
+table 'Time Intelligence'
+	lineageTag: bf10263d-0f1d-4c9f-a86a-73737fb194b5
+
+	calculationGroup
+		precedence: 1
+
+		calculationItem AC = SELECTEDMEASURE ()
+
+		calculationItem 'achiev. AC vs Y-2' =
+				VAR AC =
+				    SELECTEDMEASURE ()
+				VAR Y2 =
+				    CALCULATE (
+				        SELECTEDMEASURE (),
+				        DATEADD ( Calendar[Date], -2, YEAR ),
+				        ALL ( Calendar )
+				    )
+				RETURN
+				    1
+				        - (
+				            (
+				                IFERROR ( ( Y2 - AC ), 0 ) / Y2
+				            )
+				        )
+
+		calculationItem 'achiev. AC vs Y-1' =
+				VAR AC =
+				    SELECTEDMEASURE ()
+				VAR Y1 =
+				    CALCULATE (
+				        SELECTEDMEASURE (),
+				        SAMEPERIODLASTYEAR ( Calendar[Date] ),
+				        ALL ( Calendar )
+				    )
+				RETURN
+				    1
+				        - (
+				            (
+				                IFERROR ( ( Y1 - AC ), 0 ) / Y1
+				            )
+				        )
+
+		calculationItem 'AC vs YTD-2' =
+				VAR AC =
+				    TOTALYTD (
+				        SELECTEDMEASURE (),
+				        DATESYTD ( Calendar[Date], "12/31" ),
+				        ALL ( Calendar )
+				    )
+				VAR Y2 =
+				    CALCULATE (
+				        SELECTEDMEASURE (),
+				        DATEADD ( DATESYTD ( Calendar[Date], "12/31" ), -2, YEAR ),
+				        ALL ( Calendar )
+				    )
+				RETURN
+				    DIVIDE ( AC - Y2, Y2 )
+
+		calculationItem 'AC vs YTD-1' =
+				VAR AC =
+				    TOTALYTD (
+				        SELECTEDMEASURE (),
+				        DATESYTD ( Calendar[Date], "12/31" ),
+				        ALL ( Calendar )
+				    )
+				VAR Y1 =
+				    CALCULATE (
+				        SELECTEDMEASURE (),
+				        DATEADD ( DATESYTD ( Calendar[Date], "12/31" ), -1, YEAR ),
+				        ALL ( Calendar )
+				    )
+				RETURN
+				    DIVIDE ( AC - Y1, Y1 )
+
+		calculationItem 'AC vs Y-2' =
+				VAR AC =
+				    TOTALYTD (
+				        SELECTEDMEASURE (),
+				        DATESYTD ( Calendar[Date], "12/31" ),
+				        ALL ( Calendar )
+				    )
+				VAR Y2 =
+				    CALCULATE (
+				        SELECTEDMEASURE (),
+				        DATEADD ( Calendar[Date], -2, YEAR ),
+				        ALL ( Calendar )
+				    )
+				RETURN
+				    DIVIDE ( AC - Y2, Y2 )
+
+		calculationItem 'AC vs Y-1' =
+				VAR AC =
+				    TOTALYTD (
+				        SELECTEDMEASURE (),
+				        DATESYTD ( Calendar[Date], "12/31" ),
+				        ALL ( Calendar )
+				    )
+				VAR Y1 =
+				    CALCULATE (
+				        SELECTEDMEASURE (),
+				        SAMEPERIODLASTYEAR ( Calendar[Date] ),
+				        ALL ( Calendar )
+				    )
+				RETURN
+				    DIVIDE ( AC - Y1, Y1 )
+
+		calculationItem 'abs. AC vs YTD-2' =
+				VAR AC =
+				    TOTALYTD (
+				        SELECTEDMEASURE (),
+				        DATESYTD ( Calendar[Date], "12/31" ),
+				        ALL ( Calendar )
+				    )
+				VAR Y2 =
+				    CALCULATE (
+				        SELECTEDMEASURE (),
+				        DATEADD ( DATESYTD ( Calendar[Date], "12/31" ), -2, YEAR ),
+				        ALL ( Calendar )
+				    )
+				RETURN
+				    AC - Y2
+
+		calculationItem 'achiev. AC vs YTD-1' =
+				VAR AC =
+				    TOTALYTD (
+				        SELECTEDMEASURE (),
+				        DATESYTD ( Calendar[Date], "12/31" ),
+				        ALL ( Calendar )
+				    )
+				VAR Y1 =
+				    CALCULATE (
+				        SELECTEDMEASURE (),
+				        DATEADD ( DATESYTD ( Calendar[Date], "12/31" ), -1, YEAR ),
+				        ALL ( Calendar )
+				    )
+				RETURN
+				    1
+				        - (
+				            (
+				                IFERROR ( ( Y1 - AC ), 0 ) / Y1
+				            )
+				        )
+
+		calculationItem 'abs. AC vs YTD-1' =
+				VAR AC =
+				    TOTALYTD (
+				        SELECTEDMEASURE (),
+				        DATESYTD ( Calendar[Date], "12/31" ),
+				        ALL ( Calendar )
+				    )
+				VAR Y1 =
+				    CALCULATE (
+				        SELECTEDMEASURE (),
+				        DATEADD ( DATESYTD ( Calendar[Date], "12/31" ), -1, YEAR ),
+				        ALL ( Calendar )
+				    )
+				RETURN
+				    AC - Y1
+
+		calculationItem 'abs. AC vs Y-1' =
+				VAR AC =
+				    TOTALYTD (
+				        SELECTEDMEASURE (),
+				        DATESYTD ( Calendar[Date], "12/31" ),
+				        ALL ( Calendar )
+				    )
+				VAR Y1 =
+				    CALCULATE (
+				        SELECTEDMEASURE (),
+				        DATEADD ( DATESYTD ( Calendar[Date], "12/31" ), -1, YEAR ),
+				        ALL ( Calendar )
+				    )
+				RETURN
+				    AC - Y1
+
+		calculationItem YTD-2 =
+				CALCULATE (
+				    SELECTEDMEASURE (),
+				    DATEADD ( DATESYTD ( Calendar[Date], "12/31" ), -2, YEAR ),
+				    ALL ( Calendar )
+				)
+
+		calculationItem YTD-1 =
+				CALCULATE (
+				    SELECTEDMEASURE (),
+				    DATEADD ( DATESYTD ( Calendar[Date], "12/31" ), -1, YEAR ),
+				    ALL ( Calendar )
+				)
+
+		calculationItem YTD =
+				CALCULATE (
+				    SELECTEDMEASURE (),
+				    DATESYTD ( Calendar[Date], "12/31" ),
+				    ALL ( Calendar )
+				)
+
+		calculationItem Y-3 =
+				CALCULATE (
+				    SELECTEDMEASURE (),
+				    DATEADD ( DATESYTD ( Calendar[Date], "12/31" ), -3, YEAR ),
+				    ALL ( Calendar )
+				)
+
+		calculationItem Y-2 =
+				CALCULATE (
+				    SELECTEDMEASURE (),
+				    DATEADD ( DATESYTD ( Calendar[Date], "12/31" ), -2, YEAR ),
+				    ALL ( Calendar )
+				)
+
+		calculationItem Y-1 =
+				CALCULATE (
+				    SELECTEDMEASURE (),
+				    DATEADD ( DATESYTD ( Calendar[Date], "12/31" ), -1, YEAR ),
+				    ALL ( Calendar )
+				)
+
+		calculationItem 'abs. AC vs Y-2' =
+				VAR AC =
+				    TOTALYTD (
+				        SELECTEDMEASURE (),
+				        DATESYTD ( Calendar[Date], "12/31" ),
+				        ALL ( Calendar )
+				    )
+				VAR Y2 =
+				    CALCULATE (
+				        SELECTEDMEASURE (),
+				        DATEADD ( DATESYTD ( Calendar[Date], "12/31" ), -2, YEAR ),
+				        ALL ( Calendar )
+				    )
+				RETURN
+				    AC - Y2
+
+		calculationItem 'achiev. AC vs YTD-2' =
+				VAR AC =
+				    TOTALYTD (
+				        SELECTEDMEASURE (),
+				        DATESYTD ( Calendar[Date], "12/31" ),
+				        ALL ( Calendar )
+				    )
+				VAR Y2 =
+				    CALCULATE (
+				        SELECTEDMEASURE (),
+				        DATEADD ( DATESYTD ( Calendar[Date], "12/31" ), -2, YEAR ),
+				        ALL ( Calendar )
+				    )
+				RETURN
+				    1
+				        - (
+				            (
+				                IFERROR ( ( Y2 - AC ), 0 ) / Y2
+				            )
+				        )
+
+	column 'Time Intelligence'
+		dataType: string
+		lineageTag: 352acd62-7392-4957-8b8a-66939e985a26
+		sourceColumn: Name
+		sortByColumn: Ordinal
+
+	column Ordinal
+		dataType: int64
+		isHidden
+		lineageTag: 8bd9a3c0-41c3-4076-8f24-42bda27543b6
+		sourceColumn: Ordinal
+
