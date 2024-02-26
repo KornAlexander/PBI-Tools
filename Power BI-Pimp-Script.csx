@@ -93,6 +93,10 @@ if (addtables)
     GenerateEmptyMeasureTable = (dialogResult == DialogResult.Yes);
 }
 
+
+DialogResult dialogResult17 = MessageBox.Show(text:"Set IsAvailableInMDX to False for all all columns ending with 'ID' or 'Key'? \n\nThis is a best practice to reduce memory. Please be aware that those column will not be available in Excel and will not work for DAX calculation like DISCTINCTCOUNT.", caption:"MDXAvailable False", buttons:MessageBoxButtons.YesNo);
+bool MagicSauce = (dialogResult17 == DialogResult.Yes); 
+
 DialogResult dialogResult15 = MessageBox.Show(text:"Change the current aggregation to 'none' for all columns ending with 'Key' or 'ID'?\n\nThis is a best practice, but also helpful if you want to add explicit measures for all non key columns in a following step within this script.", caption:"Aggregation Key Columns", buttons:MessageBoxButtons.YesNo);
 bool KeyColumnsAggregation = (dialogResult15 == DialogResult.Yes); 
 
@@ -185,7 +189,8 @@ if (!Model.DiscourageImplicitMeasures)
     
     "\n\nOther:"+
     "\n9. Remove Aggregation for Key Columns: "+KeyColumnsAggregation+
-    "\n10. Load BPA: "+LoadBPA
+    "\n10. Set AVAILABLEMDX to False: "+MagicSauce+
+    "\n11. Load BPA: "+LoadBPA
     
     
     ,caption:"Summary of Selected Parameters", buttons:MessageBoxButtons.OKCancel);
@@ -250,6 +255,21 @@ if (KeyColumnsAggregation)
             if (column.Name.EndsWith("Key") || column.Name.EndsWith("ID"))
             {
                 column.SummarizeBy = AggregateFunction.None;
+            }
+        }
+    }
+    }
+
+// Set IsAvailableInMDX to false; ***********************************************************
+if (MagicSauce)
+    {
+    foreach (var table in Model.Tables)
+    {
+        foreach (var column in table.Columns)
+        {
+            if (column.Name.EndsWith("Key") || column.Name.EndsWith("ID"))
+            {
+                column.IsAvailableInMDX = false;
             }
         }
     }
