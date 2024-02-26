@@ -1,53 +1,11 @@
 table Measure
 	lineageTag: 6e102c24-8229-4832-b917-5b114177f2cf
 
-	measure 'UnitPrice (Sum) ' = SUM ( 'Orders'[UnitPrice] )
-		displayFolder: Orders
-		lineageTag: 1b93f616-f436-451d-932b-4e9639ce3a25
-
-		annotation CreatedThrough = CreateExplicitMeasures
-
-	measure 'Quantities (Sum) ' = SUM ( 'Orders'[Quantities] )
-		displayFolder: Orders
-		lineageTag: f1ca33c2-56a3-4950-9861-90c66964b1cc
-
-		annotation CreatedThrough = CreateExplicitMeasures
-
-	measure 'Discount (Sum) ' = SUM ( 'Orders'[Discount] )
-		displayFolder: Orders
-		lineageTag: 1b50a2bc-e076-40c3-ad52-dfcb8b431890
-
-		annotation CreatedThrough = CreateExplicitMeasures
-
-	measure 'Freight (Sum) ' = SUM ( 'Orders'[Freight] )
-		displayFolder: Orders
-		lineageTag: dd39717e-ee84-4653-9e8e-74defd3dcc19
-
-		annotation CreatedThrough = CreateExplicitMeasures
-
-	measure 'Amounts (Sum) ' = SUM ( 'Orders'[Amounts] )
-		displayFolder: Orders
-		lineageTag: 3189b2b6-0bff-4716-b4be-5b61d4401fe5
-
-		annotation CreatedThrough = CreateExplicitMeasures
-
-	measure 'Last Refresh Measure' = "Last Refresh: " & MAX('Last Refresh'[Last Refreshes])
-		displayFolder: Meta
-		lineageTag: 132f0b75-4716-4a58-8717-0b9023975f48
-
-	column 'Name of Measure'
+	column 'Put Your Measure in this Table and Hide this Columns'
 		dataType: string
-		isHidden
 		lineageTag: f6f788f9-6e3c-4113-aa8b-4abb335dd758
 		summarizeBy: none
 		sourceColumn: Name of Measure
-
-	column Description
-		dataType: string
-		isHidden
-		lineageTag: 1567ce6e-930c-4ee8-9410-1f49ccb920e3
-		summarizeBy: none
-		sourceColumn: Description
 
 	partition Measure = m
 		mode: import
