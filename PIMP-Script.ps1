@@ -33,7 +33,7 @@ Please select scope in subsequent step from topics such as:
 
 Disclaimer: Please have a backup of your pbix file. Make sure to have the TMDL file format for your pbip files enabled. 
 
-Do you would like to proceed?'
+Would you like to proceed?'
 $confirm = [Microsoft.VisualBasic.Interaction]::MsgBox(
     $message,
     [Microsoft.VisualBasic.MsgBoxStyle]::Information + [Microsoft.VisualBasic.MsgBoxStyle]::YesNo,
