@@ -1,0 +1,160 @@
+{
+  "version": "1.1.0",
+  "diagrams": [
+    {
+      "ordinal": 0,
+      "scrollPosition": {
+        "x": 0,
+        "y": 0
+      },
+      "nodes": [
+        {
+          "location": {
+            "x": 747.1962628592903,
+            "y": 500.28692005083406
+          },
+          "nodeIndex": "Orders",
+          "nodeLineageTag": "f3539d3c-c9b4-4279-a436-6ddd37c9d7cd",
+          "size": {
+            "height": 300,
+            "width": 234
+          },
+          "zIndex": 7
+        },
+        {
+          "location": {
+            "x": 794.34999980277246,
+            "y": 67.408460891589783
+          },
+          "nodeIndex": "Product",
+          "nodeLineageTag": "32364d21-b7e3-402b-9c97-f1b7b0572578",
+          "size": {
+            "height": 300,
+            "width": 234
+          },
+          "zIndex": 6
+        },
+        {
+          "location": {
+            "x": 267.45153868848064,
+            "y": 114.67004199003227
+          },
+          "nodeIndex": "Employee",
+          "size": {
+            "height": 300,
+            "width": 234
+          },
+          "zIndex": 1
+        },
+        {
+          "location": {
+            "x": 33.148933876391226,
+            "y": 662.3827717187786
+          },
+          "nodeIndex": "Ship To Customer",
+          "size": {
+            "height": 224,
+            "width": 234
+          },
+          "zIndex": 2
+        },
+        {
+          "location": {
+            "x": 418.01224390090738,
+            "y": 841.04597923163954
+          },
+          "nodeIndex": "Sold To Customer",
+          "size": {
+            "height": 300,
+            "width": 234
+          },
+          "zIndex": 3
+        },
+        {
+          "location": {
+            "x": 935.069225594811,
+            "y": 948.92473292728027
+          },
+          "nodeIndex": "Shipper",
+          "size": {
+            "height": 152,
+            "width": 234
+          },
+          "zIndex": 4
+        },
+        {
+          "location": {
+            "x": 1255.0572759401014,
+            "y": 833.161511281091
+          },
+          "nodeIndex": "Time Intelligence",
+          "nodeLineageTag": "43fd7f35-9f00-4fcc-8d4d-79b8b6b865f1",
+          "size": {
+            "height": 128,
+            "width": 234
+          },
+          "zIndex": 5
+        },
+        {
+          "location": {
+            "x": 1241.9190744935618,
+            "y": 377.258257064
+          },
+          "nodeIndex": "Calendar",
+          "nodeLineageTag": "24a3bb60-7b9d-4b6e-90b2-2d808a3fcd31",
+          "size": {
+            "height": 300,
+            "width": 234
+          },
+          "zIndex": 8
+        },
+        {
+          "location": {
+            "x": 1505.90834206371,
+            "y": 474.267904109797
+          },
+          "nodeIndex": "Measure",
+          "size": {
+            "height": 200,
+            "width": 234
+          },
+          "zIndex": 0
+        },
+        {
+          "location": {
+            "x": 1756.7594081873187,
+            "y": 435.28824613388815
+          },
+          "nodeIndex": "Calendar CalcTable",
+          "nodeLineageTag": "3ee1dd07-c12b-4591-a9b2-6efbb7b5ee47",
+          "size": {
+            "height": 248,
+            "width": 234
+          },
+          "zIndex": 0
+        },
+        {
+          "location": {
+            "x": 2040.7594081873187,
+            "y": 507.28824613388815
+          },
+          "nodeIndex": "Last Refresh",
+          "nodeLineageTag": "36e03ad0-c262-4f55-8e13-04e4eb9c12b0",
+          "size": {
+            "height": 104,
+            "width": 234
+          },
+          "zIndex": 0
+        }
+      ],
+      "name": "All tables",
+      "zoomValue": 66.629593121630649,
+      "pinKeyFieldsToTop": false,
+      "showExtraHeaderInfo": false,
+      "hideKeyFieldsWhenCollapsed": false,
+      "tablesLocked": false
+    }
+  ],
+  "selectedDiagram": "All tables",
+  "defaultDiagram": "All tables"
+}

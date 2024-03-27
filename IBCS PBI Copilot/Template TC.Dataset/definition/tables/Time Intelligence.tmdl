@@ -1,0 +1,398 @@
+table 'Time Intelligence'
+	lineageTag: 43fd7f35-9f00-4fcc-8d4d-79b8b6b865f1
+
+	calculationGroup
+
+		calculationItem AC = SELECTEDMEASURE()
+
+		calculationItem Y-1 = ```
+				CALCULATE (
+				    SELECTEDMEASURE(),
+				    SAMEPERIODLASTYEAR ( 'Calendar'[Date] ),
+				    ALL ( 'Calendar' )
+				)
+				
+				```
+
+		calculationItem Y-2 =
+				CALCULATE (
+				    SELECTEDMEASURE(),
+				    DATEADD('Calendar'[Date],-2,year),
+				    ALL ( 'Calendar' )
+				)
+
+		calculationItem Y-3 =
+				CALCULATE (
+				    SELECTEDMEASURE(),
+				    DATEADD('Calendar'[Date],-3,year),
+				    ALL ( 'Calendar' )
+				)
+
+		calculationItem YTD =
+				CALCULATE(
+				    SELECTEDMEASURE(),
+				    DATESYTD( 'Calendar'[Date], "12/31" ),
+				    ALL( 'Calendar' )
+				)
+
+		calculationItem YTD-1 =
+				CALCULATE(
+				    SELECTEDMEASURE(),
+				    DATEADD( DATESYTD( 'Calendar'[Date], "12/31" ), -1, YEAR ),
+				    ALL( 'Calendar' )
+				)
+
+		calculationItem YTD-2 =
+				CALCULATE(
+				    SELECTEDMEASURE(),
+				    DATEADD( DATESYTD( 'Calendar'[Date], "12/31" ), -2, YEAR ),
+				    ALL( 'Calendar' )
+				)
+
+		calculationItem FYTD-1 =
+				CALCULATE(
+				    SELECTEDMEASURE(),
+				    DATEADD( DATESYTD( 'Calendar'[Date], "07/31" ), -1, YEAR ),
+				    ALL( 'Calendar' )
+				)
+
+		calculationItem FYTD-2 =
+				CALCULATE(
+				    SELECTEDMEASURE(),
+				    DATEADD( DATESYTD( 'Calendar'[Date], "07/31" ), -2, YEAR ),
+				    ALL( 'Calendar' )
+				)
+
+		calculationItem 'abs. AC vs Y-1' =
+				VAR AC =
+				    SELECTEDMEASURE()
+				VAR Y1 =
+				    CALCULATE(
+				        SELECTEDMEASURE(),
+				        SAMEPERIODLASTYEAR( 'Calendar'[Date] ),
+				        ALL( 'Calendar' )
+				    )
+				RETURN
+				    AC - Y1
+
+		calculationItem 'abs. AC vs Y-2' =
+				VAR AC =
+				    SELECTEDMEASURE()
+				VAR Y2 =
+				    CALCULATE(
+				        SELECTEDMEASURE(),
+				        DATEADD( 'Calendar'[Date], -2, YEAR ),
+				        ALL( 'Calendar' )
+				    )
+				RETURN
+				    AC - Y2
+
+		calculationItem 'abs. AC vs YTD-1' =
+				VAR AC =
+				    TOTALYTD(
+				        SELECTEDMEASURE(),
+				        DATESYTD( 'Calendar'[Date], "12/31" ),
+				        ALL( 'Calendar' )
+				    )
+				VAR Y1 =
+				    CALCULATE(
+				        SELECTEDMEASURE(),
+				        DATEADD( DATESYTD( 'Calendar'[Date], "12/31" ), -1, YEAR ),
+				        ALL( 'Calendar' )
+				    )
+				RETURN
+				    AC - Y1
+
+		calculationItem 'abs. AC vs YTD-2 ' =
+				VAR AC =
+				    TOTALYTD(
+				        SELECTEDMEASURE(),
+				        DATESYTD( 'Calendar'[Date], "12/31" ),
+				        ALL( 'Calendar' )
+				    )
+				VAR Y2 =
+				    CALCULATE(
+				        SELECTEDMEASURE(),
+				        DATEADD( DATESYTD( 'Calendar'[Date], "12/31" ), -2, YEAR ),
+				        ALL( 'Calendar' )
+				    )
+				RETURN
+				    AC - Y2
+
+		calculationItem 'abs. AC vs FYTD-1' =
+				VAR AC =
+				    CALCULATE(
+				        SELECTEDMEASURE(),
+				        DATESYTD( 'Calendar'[Date], "07/31" ),
+				        ALL( 'Calendar' )
+				    )
+				VAR Y1 =
+				    CALCULATE(
+				        SELECTEDMEASURE(),
+				        DATEADD( DATESYTD( 'Calendar'[Date], "07/31" ), -1, YEAR ),
+				        ALL( 'Calendar' )
+				    )
+				RETURN
+				    AC - Y1
+
+		calculationItem 'abs. AC vs FYTD-2' =
+				VAR AC =
+				    CALCULATE(
+				        SELECTEDMEASURE(),
+				        DATESYTD( 'Calendar'[Date], "07/31" ),
+				        ALL( 'Calendar' )
+				    )
+				VAR Y2 =
+				    CALCULATE(
+				        SELECTEDMEASURE(),
+				        DATEADD( DATESYTD( 'Calendar'[Date], "07/31" ), -2, YEAR ),
+				        ALL( 'Calendar' )
+				    )
+				RETURN
+				    AC - Y2
+
+		calculationItem 'AC vs Y-1' =
+				VAR AC =
+				TOTALYTD(
+				    SELECTEDMEASURE(),
+				    DATESYTD( 'Calendar'[Date], "12/31" ),
+				    ALL( 'Calendar' )
+				)
+				VAR Y1 =
+				    CALCULATE(
+				        SELECTEDMEASURE(),
+				        SAMEPERIODLASTYEAR( 'Calendar'[Date] ),
+				        ALL( 'Calendar' )
+				    )
+				RETURN
+				    DIVIDE( AC - Y1, Y1 )
+
+		calculationItem 'AC vs Y-2' =
+				VAR AC =
+				TOTALYTD(
+				    SELECTEDMEASURE(),
+				    DATESYTD( 'Calendar'[Date], "12/31" ),
+				    ALL( 'Calendar' )
+				)
+				VAR Y2 =
+				    CALCULATE(
+				        SELECTEDMEASURE(),
+				        DATEADD( 'Calendar'[Date], -2, YEAR ),
+				        ALL( 'Calendar' )
+				    )
+				RETURN
+				    DIVIDE( AC - Y2, Y2 )
+
+		calculationItem 'AC vs YTD-1' =
+				VAR AC =
+				    TOTALYTD(
+				        SELECTEDMEASURE(),
+				        DATESYTD( 'Calendar'[Date], "12/31" ),
+				        ALL( 'Calendar' )
+				    )
+				VAR Y1 =
+				    CALCULATE(
+				        SELECTEDMEASURE(),
+				        DATEADD( DATESYTD( 'Calendar'[Date], "12/31" ), -1, YEAR ),
+				        ALL( 'Calendar' )
+				    )
+				RETURN
+				    DIVIDE( AC - Y1, Y1 )
+
+		calculationItem 'AC vs YTD-2' =
+				VAR AC =
+				    TOTALYTD(
+				        SELECTEDMEASURE(),
+				        DATESYTD( 'Calendar'[Date], "12/31" ),
+				        ALL( 'Calendar' )
+				    )
+				VAR Y2 =
+				    CALCULATE(
+				        SELECTEDMEASURE(),
+				        DATEADD( DATESYTD( 'Calendar'[Date], "12/31" ), -2, YEAR ),
+				        ALL( 'Calendar' )
+				    )
+				RETURN
+				    DIVIDE( AC - Y2, Y2 )
+
+		calculationItem 'AC vs FYTD-1' =
+				VAR AC =
+				    CALCULATE(
+				        SELECTEDMEASURE(),
+				        DATESYTD( 'Calendar'[Date], "07/31" ),
+				        ALL( 'Calendar' )
+				    )
+				VAR Y1 =
+				    CALCULATE(
+				        SELECTEDMEASURE(),
+				        DATEADD( DATESYTD( 'Calendar'[Date], "07/31" ), -1, YEAR ),
+				        ALL( 'Calendar' )
+				    )
+				RETURN
+				    DIVIDE( AC - Y1, Y1 )
+
+		calculationItem 'AC vs FYTD-2' =
+				VAR AC =
+				    CALCULATE(
+				        SELECTEDMEASURE(),
+				        DATESYTD( 'Calendar'[Date], "07/31" ),
+				        ALL( 'Calendar' )
+				    )
+				VAR Y2 =
+				    CALCULATE(
+				        SELECTEDMEASURE(),
+				        DATEADD( DATESYTD( 'Calendar'[Date], "07/31" ), -2, YEAR ),
+				        ALL( 'Calendar' )
+				    )
+				RETURN
+				    DIVIDE( AC - Y2, Y2 )
+
+		calculationItem 'achiev. AC vs Y-1' =
+				VAR AC =
+				    SELECTEDMEASURE()
+				VAR Y1 =
+				    CALCULATE(
+				        SELECTEDMEASURE(),
+				        SAMEPERIODLASTYEAR( 'Calendar'[Date] ),
+				        ALL( 'Calendar' )
+				    )
+				RETURN
+				    1
+				        - (
+				            (
+				                IFERROR( ( Y1 - AC ), 0 ) / Y1
+				            )
+				        )
+
+		calculationItem 'achiev. AC vs Y-2' = ```
+				VAR AC =
+				    SELECTEDMEASURE()
+				VAR Y2 =
+				CALCULATE (
+				    SELECTEDMEASURE(),
+				    DATEADD('Calendar'[Date],-2,year),
+				    ALL ( 'Calendar' )
+				)
+				    
+				RETURN
+				    1
+				        - (
+				            (
+				                IFERROR( ( Y2 - AC ), 0 ) / Y2
+				            )
+				        )
+				        
+				        
+				
+				
+				```
+
+		calculationItem 'achiev. AC vs YTD-1' =
+				VAR AC =
+				    TOTALYTD(
+				        SELECTEDMEASURE(),
+				        DATESYTD( 'Calendar'[Date], "12/31" ),
+				        ALL( 'Calendar' )
+				    )
+				VAR Y1 =
+				    CALCULATE(
+				        SELECTEDMEASURE(),
+				        DATEADD( DATESYTD( 'Calendar'[Date], "12/31" ), -1, YEAR ),
+				        ALL( 'Calendar' )
+				    )
+				RETURN
+				    1
+				        - (
+				            (
+				                IFERROR( ( Y1 - AC ), 0 ) / Y1
+				            )
+				        )
+
+		calculationItem 'achiev. AC vs YTD-2' =
+				VAR AC =
+				    TOTALYTD(
+				        SELECTEDMEASURE(),
+				        DATESYTD( 'Calendar'[Date], "12/31" ),
+				        ALL( 'Calendar' )
+				    )
+				VAR Y2 =
+				    CALCULATE(
+				        SELECTEDMEASURE(),
+				        DATEADD( DATESYTD( 'Calendar'[Date], "12/31" ), -2, YEAR ),
+				        ALL( 'Calendar' )
+				    )
+				RETURN
+				    1
+				        - (
+				            (
+				                IFERROR( ( Y2 - AC ), 0 ) / Y2
+				            )
+				        )
+
+		calculationItem 'achiev. AC vs FYTD-1' =
+				VAR AC =
+				    CALCULATE(
+				        SELECTEDMEASURE(),
+				        DATESYTD( 'Calendar'[Date], "07/31" ),
+				        ALL( 'Calendar' )
+				    )
+				VAR Y1 =
+				    CALCULATE(
+				        SELECTEDMEASURE(),
+				        DATEADD( DATESYTD( 'Calendar'[Date], "07/31" ), -1, YEAR ),
+				        ALL( 'Calendar' )
+				    )
+				RETURN
+				    1
+				        - (
+				            (
+				                IFERROR( ( Y1 - AC ), 0 ) / Y1
+				            )
+				        )
+
+		calculationItem 'achiev. AC vs FYTD-2' =
+				VAR AC =
+				    CALCULATE(
+				        SELECTEDMEASURE(),
+				        DATESYTD( 'Calendar'[Date], "07/31" ),
+				        ALL( 'Calendar' )
+				    )
+				VAR Y2 =
+				    CALCULATE(
+				        SELECTEDMEASURE(),
+				        DATEADD( DATESYTD( 'Calendar'[Date], "07/31" ), -2, YEAR ),
+				        ALL( 'Calendar' )
+				    )
+				RETURN
+				    1
+				        - (
+				            (
+				                IFERROR( ( Y2 - AC ), 0 ) / Y2
+				            )
+				        )
+
+		calculationItem FYTD =
+				CALCULATE(
+				    SELECTEDMEASURE(),
+				    DATESYTD( 'Calendar'[Date], "07/31" ),
+				    ALL( 'Calendar' )
+				)
+
+	column 'Time Intelligence'
+		dataType: string
+		lineageTag: 38bb56a5-78d7-4331-9b17-006dea6482a3
+		summarizeBy: none
+		sourceColumn: Name
+		sortByColumn: Ordinal
+
+		annotation SummarizationSetBy = Automatic
+
+	column Ordinal
+		dataType: int64
+		isHidden
+		lineageTag: 6bd765f5-532e-4010-8f50-87deec01775a
+		summarizeBy: sum
+		sourceColumn: Ordinal
+
+		annotation SummarizationSetBy = Automatic
+

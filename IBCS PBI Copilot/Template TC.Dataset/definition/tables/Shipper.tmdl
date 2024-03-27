@@ -1,0 +1,44 @@
+table Shipper
+	lineageTag: 965e331a-b157-4b7f-922e-c558b5d686f6
+
+	column ShipperID
+		dataType: int64
+		formatString: 0
+		lineageTag: ea6ec650-84ac-4bc7-bf84-c58792c8c863
+		summarizeBy: none
+		sourceColumn: ShipperID
+
+		annotation SummarizationSetBy = Automatic
+
+	column CompanyName
+		dataType: string
+		lineageTag: dd041308-5f45-42e1-9ac8-9d2405d4853d
+		summarizeBy: none
+		sourceColumn: CompanyName
+
+		annotation SummarizationSetBy = Automatic
+
+	column Phone
+		dataType: string
+		lineageTag: 5faadf62-0352-46fa-897b-e11e2c801bb2
+		summarizeBy: none
+		sourceColumn: Phone
+
+		annotation SummarizationSetBy = Automatic
+
+	partition Shipper = m
+		mode: import
+		queryGroup: '03 Fact and Dimension Tables'
+		source =
+				let
+				    Source = Excel.Workbook(File.Contents(#"Excel File Path"), null, true),
+				    Shippers1 = Source{[Name="Shippers"]}[Data],
+				    #"Promoted Headers" = Table.PromoteHeaders(Shippers1, [PromoteAllScalars=true]),
+				    #"Changed Type" = Table.TransformColumnTypes(#"Promoted Headers",{{"ShipperID", Int64.Type}, {"CompanyName", type text}, {"Phone", type text}})
+				in
+				    #"Changed Type"
+
+	annotation PBI_ResultType = Table
+
+	annotation PBI_NavigationStepName = Navigation
+

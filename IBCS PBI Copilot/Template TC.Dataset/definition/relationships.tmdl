@@ -1,0 +1,34 @@
+relationship e9ab5863-8d61-4b48-8d4f-8d4fef6afb6f
+	fromColumn: Orders.ProductID
+	toColumn: Product.ProductID
+
+relationship 3ec2b540-9a3b-4ed5-be14-85941ea80018
+	fromColumn: Orders.'Sold To Customer'
+	toColumn: 'Sold To Customer'.CustomerID
+
+relationship 9b9935d9-cdb2-4ca3-b331-a0f623d34e7b
+	fromColumn: Orders.EmployeeID
+	toColumn: Employee.EmployeeID
+
+relationship 4f92c261-528e-4f25-9f53-3126f400d940
+	fromColumn: Orders.'Ship To Customer'
+	toColumn: 'Ship To Customer'.ShipName
+
+relationship ec4882df-285f-4881-b86c-999e239836d0
+	fromColumn: Orders.OrderDate
+	toColumn: Calendar.Date
+
+relationship f783a541-f4fb-442e-93e5-208318286b4b
+	isActive: false
+	fromColumn: Orders.RequiredDate
+	toColumn: Calendar.Date
+
+relationship 19d6b1a7-e95b-4074-b526-30e82258d263
+	isActive: false
+	fromColumn: Orders.ShippedDate
+	toColumn: Calendar.Date
+
+relationship e8db83dd-86fc-44a3-81c1-e3fa7b1d2e67
+	fromColumn: Orders.'ShipVia ID'
+	toColumn: Shipper.ShipperID
+

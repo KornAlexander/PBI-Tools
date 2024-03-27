@@ -1,0 +1,195 @@
+table Employee
+	lineageTag: 5771c1a4-20d5-4812-a7d2-7124c994cb27
+
+	column EmployeeID
+		dataType: int64
+		isHidden
+		formatString: 0
+		lineageTag: 49cda0fd-02b9-488a-80da-1da13c14b798
+		summarizeBy: none
+		sourceColumn: EmployeeID
+
+		annotation SummarizationSetBy = Automatic
+
+	column LastName
+		dataType: string
+		isHidden
+		lineageTag: 3f94dfdf-ae01-4c6c-8e0a-de5df0ab8839
+		summarizeBy: none
+		sourceColumn: LastName
+
+		annotation SummarizationSetBy = Automatic
+
+	column FirstName
+		dataType: string
+		isHidden
+		lineageTag: f123e90b-ceef-4548-8b16-51eb3aeae10b
+		summarizeBy: none
+		sourceColumn: FirstName
+
+		annotation SummarizationSetBy = Automatic
+
+	column Title
+		dataType: string
+		lineageTag: 3056f421-c9c7-4df0-8b81-cf9b9b8791c2
+		summarizeBy: none
+		sourceColumn: Title
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column TitleOfCourtesy
+		dataType: string
+		isHidden
+		lineageTag: 9bd3e9a2-d694-4658-8ae0-44f105d9cb6b
+		summarizeBy: none
+		sourceColumn: TitleOfCourtesy
+
+		annotation SummarizationSetBy = Automatic
+
+	column BirthDate
+		dataType: dateTime
+		isHidden
+		formatString: Long Date
+		lineageTag: 3c7d4814-84b0-436a-a627-3c3212cf9a05
+		summarizeBy: none
+		sourceColumn: BirthDate
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation UnderlyingDateTimeDataType = Date
+
+	column HireDate
+		dataType: dateTime
+		isHidden
+		formatString: Long Date
+		lineageTag: 2dc8a8cf-24c2-4490-9cf6-7de4d188ed3f
+		summarizeBy: none
+		sourceColumn: HireDate
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation UnderlyingDateTimeDataType = Date
+
+	column Address
+		dataType: string
+		isHidden
+		lineageTag: d2a8939a-29be-442a-9d2b-738ab46652d5
+		summarizeBy: none
+		sourceColumn: Address
+
+		annotation SummarizationSetBy = Automatic
+
+	column City
+		dataType: string
+		lineageTag: f995f6d8-e833-4425-8974-beb8679ac892
+		summarizeBy: none
+		sourceColumn: City
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column Region
+		dataType: string
+		isHidden
+		lineageTag: e46aa645-18a1-4201-9e26-55eba360f104
+		summarizeBy: none
+		sourceColumn: Region
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column PostalCode
+		dataType: string
+		isHidden
+		lineageTag: 28105823-e123-443f-8054-260fc92f0318
+		summarizeBy: none
+		sourceColumn: PostalCode
+
+		annotation SummarizationSetBy = Automatic
+
+	column Country
+		dataType: string
+		isHidden
+		lineageTag: eca05925-b558-4494-9d1f-91654d3e7214
+		summarizeBy: none
+		sourceColumn: Country
+
+		annotation SummarizationSetBy = Automatic
+
+	column HomePhone
+		dataType: string
+		isHidden
+		lineageTag: 1365afe6-fd7f-4419-aebe-96741cd84ee8
+		summarizeBy: none
+		sourceColumn: HomePhone
+
+		annotation SummarizationSetBy = Automatic
+
+	column Extension
+		dataType: int64
+		isHidden
+		formatString: 0
+		lineageTag: 7ea179be-dee5-46fc-aade-28fc8ec7eb0c
+		summarizeBy: sum
+		sourceColumn: Extension
+
+		annotation SummarizationSetBy = Automatic
+
+	column Photo
+		dataType: string
+		isHidden
+		lineageTag: 4150c299-f344-4637-8529-a05c185e5d9f
+		summarizeBy: none
+		sourceColumn: Photo
+
+		annotation SummarizationSetBy = Automatic
+
+	column Notes
+		dataType: string
+		isHidden
+		lineageTag: 43350bc8-1cef-44f6-83ae-5afda234f632
+		summarizeBy: none
+		sourceColumn: Notes
+
+		annotation SummarizationSetBy = Automatic
+
+	column ReportsTo
+		dataType: int64
+		isHidden
+		formatString: 0
+		lineageTag: 53984a43-4a3d-41b9-b895-7cde8acc5c86
+		summarizeBy: sum
+		sourceColumn: ReportsTo
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Full Name'
+		dataType: string
+		lineageTag: fe6812c7-7157-4072-b985-d83a771b6b93
+		summarizeBy: none
+		sourceColumn: Full Name
+
+		annotation SummarizationSetBy = Automatic
+
+	partition Employee = m
+		mode: import
+		queryGroup: '03 Fact and Dimension Tables'
+		source =
+				let
+				    Source = Excel.Workbook(File.Contents(#"Excel File Path"), null, true),
+				    Employees1 = Source{[Name="Employees"]}[Data],
+				    #"Promoted Headers" = Table.PromoteHeaders(Employees1, [PromoteAllScalars=true]),
+				    #"Changed Type" = Table.TransformColumnTypes(#"Promoted Headers",{{"EmployeeID", Int64.Type}, {"LastName", type text}, {"FirstName", type text}, {"Title", type text}, {"TitleOfCourtesy", type text}, {"BirthDate", type date}, {"HireDate", type date}, {"Address", type text}, {"City", type text}, {"Region", type text}, {"PostalCode", type text}, {"Country", type text}, {"HomePhone", type text}, {"Extension", Int64.Type}, {"Photo", type text}, {"Notes", type text}, {"ReportsTo", Int64.Type}}),
+				    #"Inserted Merged Column" = Table.AddColumn(#"Changed Type", "Merged", each Text.Combine({[FirstName], " ", [LastName]}), type text),
+				    #"Renamed Columns" = Table.RenameColumns(#"Inserted Merged Column",{{"Merged", "Full Name"}})
+				in
+				    #"Renamed Columns"
+
+	annotation PBI_ResultType = Table
+
+	annotation PBI_NavigationStepName = Navigation
+

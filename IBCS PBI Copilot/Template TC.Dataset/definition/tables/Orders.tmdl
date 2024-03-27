@@ -1,0 +1,180 @@
+table Orders
+	lineageTag: f3539d3c-c9b4-4279-a436-6ddd37c9d7cd
+
+	column ProductID
+		dataType: int64
+		isHidden
+		formatString: 0
+		lineageTag: 965ca272-d000-42f7-9d77-ef7055899daa
+		summarizeBy: none
+		sourceColumn: ProductID
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column UnitPrice
+		dataType: double
+		isHidden
+		lineageTag: 2fddc396-4e0d-4868-b907-4c92eb06bab9
+		summarizeBy: sum
+		sourceColumn: UnitPrice
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column Quantities
+		dataType: int64
+		isHidden
+		formatString: 0
+		lineageTag: 403968bc-5d43-434f-859b-ec285537be94
+		summarizeBy: sum
+		sourceColumn: Quantities
+
+		annotation SummarizationSetBy = Automatic
+
+	column Discount
+		dataType: double
+		isHidden
+		lineageTag: 9a1d844b-21fa-4221-ac4b-f4d15bb9e8e2
+		summarizeBy: sum
+		sourceColumn: Discount
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column 'Sold To Customer'
+		dataType: string
+		isHidden
+		lineageTag: b0be8b8a-40d2-4d42-ba19-7db70c5fbaa1
+		summarizeBy: none
+		sourceColumn: Sold To Customer
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column EmployeeID
+		dataType: int64
+		isHidden
+		formatString: 0
+		lineageTag: 47f9b5e5-da5d-44a2-9e0f-f0817c1a4c63
+		summarizeBy: none
+		sourceColumn: EmployeeID
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column OrderDate
+		dataType: dateTime
+		isHidden
+		formatString: Long Date
+		lineageTag: b098a5c2-d5ae-47d4-bcab-cbc5172431c7
+		summarizeBy: none
+		sourceColumn: OrderDate
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation UnderlyingDateTimeDataType = Date
+
+	column RequiredDate
+		dataType: dateTime
+		isHidden
+		formatString: Long Date
+		lineageTag: 5e955a1a-92d0-4a7c-af48-14f2b5585906
+		summarizeBy: none
+		sourceColumn: RequiredDate
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation UnderlyingDateTimeDataType = Date
+
+	column ShippedDate
+		dataType: dateTime
+		isHidden
+		formatString: Long Date
+		lineageTag: d5e9a896-ddcc-4379-b64d-58664f420dd5
+		summarizeBy: none
+		sourceColumn: ShippedDate
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation UnderlyingDateTimeDataType = Date
+
+	column 'ShipVia ID'
+		dataType: int64
+		isHidden
+		formatString: 0
+		lineageTag: 35de2299-5657-4fc9-9cf8-6ad78e8a24b3
+		summarizeBy: none
+		sourceColumn: ShipVia ID
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column Freight
+		dataType: double
+		isHidden
+		lineageTag: 36f0d0a1-f6ec-4f39-b37d-692df27b6f2c
+		summarizeBy: sum
+		sourceColumn: Freight
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column 'Ship To Customer'
+		dataType: string
+		isHidden
+		lineageTag: a9190a7b-0a94-4053-9d13-3aaa4d5b7ad1
+		summarizeBy: none
+		sourceColumn: Ship To Customer
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column Amounts
+		dataType: double
+		isHidden
+		lineageTag: d390941e-d14e-4bf5-b136-a77f8d501564
+		summarizeBy: sum
+		sourceColumn: Amounts
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	partition Orders = m
+		mode: import
+		queryGroup: '03 Fact and Dimension Tables'
+		source =
+				let
+				    Source = Excel.Workbook(File.Contents(#"Excel File Path"), null, true),
+				    #"Orders Details1" = Source{[Name="Orders Details"]}[Data],
+				    #"Promoted Headers" = Table.PromoteHeaders(#"Orders Details1", [PromoteAllScalars=true]),
+				    #"Changed Type" = Table.TransformColumnTypes(#"Promoted Headers",{{"OrderID", Int64.Type}, {"ProductID", Int64.Type}, {"UnitPrice", type number}, {"Quantity", Int64.Type}, {"Discount", type number}}),
+				    // Orders and Orders Detail
+				    #"Merged Queries" = Table.NestedJoin(#"Changed Type", {"OrderID"}, #"Orders Source", {"OrderID"}, "Orders", JoinKind.LeftOuter),
+				    // Expanded Orders, avoiding to expand Shipping dimension attributes
+				    #"Expanded Orders" = Table.ExpandTableColumn(#"Merged Queries", "Orders", {"CustomerID", "EmployeeID", "OrderDate", "RequiredDate", "ShippedDate", "ShipVia", "Freight", "ShipName"}, {"CustomerID", "EmployeeID", "OrderDate", "RequiredDate", "ShippedDate", "ShipVia", "Freight", "ShipName"}),
+				    #"Inserted Multiplication [UnitPrice * Quantity]" = Table.AddColumn(#"Expanded Orders", "Amount Without Discount applied", each [UnitPrice] * [Quantity], type number),
+				    // if 0 than 1 otherwise substract from 1
+				    #"Add Column Adjusted Discount" = Table.AddColumn(#"Inserted Multiplication [UnitPrice * Quantity]", "Adjusted Discount", each if [Discount] <> 0 then 1 - [Discount] else 1, type number),
+				    // Amount with discount applied
+				    #"Insert Column Amount with discount applied" = Table.AddColumn(#"Add Column Adjusted Discount", "Amount", each [Amount Without Discount applied] * [Adjusted Discount], type number),
+				    #"Removed Calculation Columns" = Table.RemoveColumns(#"Insert Column Amount with discount applied",{"Amount Without Discount applied", "Adjusted Discount"}),
+				    #"Renamed Columns" = Table.RenameColumns(#"Removed Calculation Columns",{{"Amount", "Amounts"}, {"Quantity", "Quantities"}}),
+				    #"Removed Columns" = Table.RemoveColumns(#"Renamed Columns",{"OrderID"}),
+				    #"Renamed Columns1" = Table.RenameColumns(#"Removed Columns",{{"CustomerID", "Sold To Customer"}, {"ShipName", "Ship To Customer"}, {"ShipVia", "ShipVia ID"}})
+				in
+				    #"Renamed Columns1"
+
+	annotation PBI_NavigationStepName = Navigation
+
+	annotation PBI_ResultType = Table
+

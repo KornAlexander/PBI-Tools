@@ -1,0 +1,19 @@
+table 'Last Refresh'
+	lineageTag: 36e03ad0-c262-4f55-8e13-04e4eb9c12b0
+
+	column 'Last Refreshes'
+		dataType: string
+		lineageTag: a606605d-7fba-40b4-9321-58268c6817cc
+		summarizeBy: none
+		sourceColumn: Last Refreshes
+
+		annotation SummarizationSetBy = Automatic
+
+	partition 'Last Refresh' = m
+		mode: import
+		source =
+				let
+				    #"Today" = #table({"Last Refreshes"}, {{DateTime.From(DateTime.LocalNow())}})
+				    in
+				        #"Today"
+

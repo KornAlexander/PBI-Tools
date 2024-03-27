@@ -1,0 +1,67 @@
+table 'Ship To Customer'
+	lineageTag: bb08b5ab-2baa-44b7-9193-84456f869632
+
+	column ShipName
+		dataType: string
+		lineageTag: 95185632-75f0-4011-9694-5a09320f854e
+		summarizeBy: none
+		sourceColumn: ShipName
+
+		annotation SummarizationSetBy = Automatic
+
+	column ShipAddress
+		dataType: string
+		lineageTag: c64b1d76-6a80-48f9-b1ca-a3b9c369031f
+		summarizeBy: none
+		sourceColumn: ShipAddress
+
+		annotation SummarizationSetBy = Automatic
+
+	column ShipCity
+		dataType: string
+		lineageTag: 50efa7d3-7160-4230-97d8-9c989c7db416
+		summarizeBy: none
+		sourceColumn: ShipCity
+
+		annotation SummarizationSetBy = Automatic
+
+	column ShipRegion
+		dataType: string
+		lineageTag: c1acdc9e-f232-4f62-b107-b9d36987d8ff
+		summarizeBy: none
+		sourceColumn: ShipRegion
+
+		annotation SummarizationSetBy = Automatic
+
+	column ShipPostalCode
+		dataType: string
+		lineageTag: 955ec004-dd0c-4edb-a729-d384617e89de
+		summarizeBy: none
+		sourceColumn: ShipPostalCode
+
+		annotation SummarizationSetBy = Automatic
+
+	column ShipCountry
+		dataType: string
+		lineageTag: ca922010-a3c5-41d7-93d6-62f9a19a5074
+		summarizeBy: none
+		sourceColumn: ShipCountry
+
+		annotation SummarizationSetBy = Automatic
+
+	partition 'Ship To Customer' = m
+		mode: import
+		queryGroup: '03 Fact and Dimension Tables'
+		source =
+				let
+				    // Getting the data from the orders fact table
+				    Source = #"Orders Source",
+				    #"Removed Other Columns" = Table.SelectColumns(Source,{"ShipName", "ShipAddress", "ShipCity", "ShipRegion", "ShipPostalCode", "ShipCountry"}),
+				    #"Removed Duplicates" = Table.Distinct(#"Removed Other Columns", {"ShipName"})
+				in
+				    #"Removed Duplicates"
+
+	annotation PBI_ResultType = Table
+
+	annotation PBI_NavigationStepName = Navigation
+

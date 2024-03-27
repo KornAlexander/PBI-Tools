@@ -1,0 +1,43 @@
+model Model
+	culture: en-US
+	defaultPowerBIDataSourceVersion: powerBI_V3
+	discourageImplicitMeasures
+	sourceQueryCulture: de-DE
+	dataAccessOptions
+		legacyRedirects
+		returnErrorValuesAsNull
+
+queryGroup '02 Datasource'
+
+	annotation PBI_QueryGroupOrder = 2
+
+queryGroup '01 Parameters'
+
+	annotation PBI_QueryGroupOrder = 1
+
+queryGroup '03 Fact and Dimension Tables'
+
+	annotation PBI_QueryGroupOrder = 2
+
+annotation PBI_QueryOrder = ["Orders","Employee","Orders Source","Categories Source","Suppliers Source","Product","Shipper","Excel File Path","Sold To Customer","Ship To Customer","Calendar","Last Refresh"]
+
+annotation __PBI_TimeIntelligenceEnabled = 0
+
+annotation PBIDesktopVersion = 2.126.927.0 (24.02)
+
+annotation __TEdtr = 1
+
+annotation PBI_ProTooling = ["CalcGroup","DevMode"]
+
+ref table Orders
+ref table Employee
+ref table Product
+ref table Shipper
+ref table 'Sold To Customer'
+ref table 'Ship To Customer'
+ref table Calendar
+ref table 'Time Intelligence'
+ref table Measure
+ref table 'Calendar CalcTable'
+ref table 'Last Refresh'
+

@@ -1,0 +1,70 @@
+table 'Calendar CalcTable'
+	lineageTag: 3ee1dd07-c12b-4591-a9b2-6efbb7b5ee47
+
+	column Date
+		dataType: dateTime
+		lineageTag: 7ffc3e36-6b4a-4b7f-9d36-81c7af1be46b
+		isNameInferred
+		isDataTypeInferred
+		sourceColumn: [Date]
+
+	column Year
+		dataType: int64
+		lineageTag: 260486c8-236c-4009-9c36-6438e4cddcd6
+		isNameInferred
+		isDataTypeInferred
+		sourceColumn: [Year]
+
+	column Quarter
+		dataType: int64
+		lineageTag: 7021d644-035d-46c3-ac01-fbae4ed88151
+		isNameInferred
+		isDataTypeInferred
+		sourceColumn: [Quarter]
+
+	column Month
+		dataType: int64
+		lineageTag: 7de52dc8-fe86-4b26-8761-11e6a113556f
+		isNameInferred
+		isDataTypeInferred
+		sourceColumn: [Month]
+
+	column 'End of Month'
+		dataType: dateTime
+		lineageTag: 593a3bdf-6742-4093-8da2-3e7ebcf5f084
+		isNameInferred
+		isDataTypeInferred
+		sourceColumn: [End of Month]
+
+	column 'Week of Year'
+		dataType: int64
+		lineageTag: 6999739e-9c78-492c-9ec9-71f2037f769a
+		isNameInferred
+		isDataTypeInferred
+		sourceColumn: [Week of Year]
+
+	column Weekday
+		dataType: int64
+		lineageTag: 9587ab5c-7232-426b-b92e-ad2d11fc5e0b
+		isNameInferred
+		isDataTypeInferred
+		sourceColumn: [Weekday]
+
+	partition 'Calendar CalcTable' = calculated
+		mode: import
+		source = ```
+				
+				VAR all_dates = CALENDARAUTO()
+				RETURN
+				    ADDCOLUMNS(
+				        all_dates,
+				        "Year", YEAR([Date]),
+				        "Quarter", QUARTER([Date]),
+				        "Month", MONTH([Date]),
+				        "End of Month", EOMONTH([Date], 0),
+				        "Week of Year", WEEKNUM([Date]),
+				        "Weekday", WEEKDAY([Date])
+				    )
+				
+				```
+

@@ -1,0 +1,128 @@
+table 'Sold To Customer'
+	lineageTag: 5c4c8495-959d-4271-acb7-7d31da74d3fe
+
+	column CustomerID
+		dataType: string
+		lineageTag: 40b074fd-4ae2-453b-8e78-7751057e6531
+		summarizeBy: none
+		sourceColumn: CustomerID
+
+		annotation SummarizationSetBy = Automatic
+
+	column CompanyName
+		dataType: string
+		lineageTag: 37d099bf-d49c-4ae5-8e17-139eb56fcc2c
+		summarizeBy: none
+		sourceColumn: CompanyName
+
+		annotation SummarizationSetBy = Automatic
+
+	column ContactName
+		dataType: string
+		lineageTag: c2439131-7dfa-4d89-b7ca-64b5eb4026af
+		summarizeBy: none
+		sourceColumn: ContactName
+
+		annotation SummarizationSetBy = Automatic
+
+	column ContactTitle
+		dataType: string
+		lineageTag: 1a4f366b-2351-470d-9f28-5dbc58687660
+		summarizeBy: none
+		sourceColumn: ContactTitle
+
+		annotation SummarizationSetBy = Automatic
+
+	column Address
+		dataType: string
+		lineageTag: f2ae166b-be4c-4a54-b9ac-f3b1a3f8669f
+		summarizeBy: none
+		sourceColumn: Address
+
+		annotation SummarizationSetBy = Automatic
+
+	column City
+		dataType: string
+		lineageTag: d74ec869-63e2-4b49-84f4-b75728e3b485
+		summarizeBy: none
+		sourceColumn: City
+
+		annotation SummarizationSetBy = Automatic
+
+	column Region
+		dataType: string
+		lineageTag: c7f69859-1717-4948-ac50-53fb69f4c724
+		summarizeBy: none
+		sourceColumn: Region
+
+		annotation SummarizationSetBy = Automatic
+
+	column PostalCode
+		dataType: string
+		lineageTag: fcc28f12-4f42-4696-9682-c41bfcc842f5
+		summarizeBy: none
+		sourceColumn: PostalCode
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Attribute 2'
+		dataType: string
+		lineageTag: 2a844501-0fb8-41f4-8097-c5da0c2860d1
+		summarizeBy: none
+		sourceColumn: Attribute 2
+
+		annotation SummarizationSetBy = Automatic
+
+	column Phone
+		dataType: string
+		lineageTag: df574183-c1ea-4b64-bb61-b3928a86f3f0
+		summarizeBy: none
+		sourceColumn: Phone
+
+		annotation SummarizationSetBy = Automatic
+
+	column Fax
+		dataType: string
+		lineageTag: 32e826c9-87d9-4686-8c68-61096a94812e
+		summarizeBy: none
+		sourceColumn: Fax
+
+		annotation SummarizationSetBy = Automatic
+
+	column lat
+		dataType: double
+		lineageTag: 10c4d0cf-01bd-406e-8098-f8b651fdcc70
+		summarizeBy: none
+		sourceColumn: lat
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column long
+		dataType: double
+		lineageTag: 1ed7aaac-f597-452f-93d5-567de4b6b521
+		summarizeBy: none
+		sourceColumn: long
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	partition 'Sold To Customer' = m
+		mode: import
+		queryGroup: '03 Fact and Dimension Tables'
+		source =
+				let
+				    Source = Excel.Workbook(File.Contents(#"Excel File Path"), null, true),
+				    Customers1 = Source{[Name="Customers"]}[Data],
+				    #"Promoted Headers" = Table.PromoteHeaders(Customers1, [PromoteAllScalars=true]),
+				    #"Changed Type" = Table.TransformColumnTypes(#"Promoted Headers",{{"CustomerID", type text}, {"CompanyName", type text}, {"ContactName", type text}, {"ContactTitle", type text}, {"Address", type text}, {"City", type text}, {"Region", type text}, {"PostalCode", type text}, {"Country", type text}, {"Phone", type text}, {"Fax", type text}, {"lat", type number}, {"long", type number}}),
+				    #"Renamed Columns" = Table.RenameColumns(#"Changed Type",{{"Country", "Attribute 2"}})
+				in
+				    #"Renamed Columns"
+
+	annotation PBI_ResultType = Table
+
+	annotation PBI_NavigationStepName = Navigation
+

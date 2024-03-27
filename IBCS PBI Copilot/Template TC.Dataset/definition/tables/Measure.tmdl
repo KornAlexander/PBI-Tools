@@ -1,0 +1,71 @@
+table Measure
+	lineageTag: 34654037-207e-4b59-936b-c4324024df11
+
+	measure 'Number of Employees' = DISTINCTCOUNT(Employee[Full Name])
+		lineageTag: 544f6f91-058f-4328-b970-fac34ea46ef4
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	/// This measure is the sum of column 'Data'[PY]
+	measure PY = ```
+			//Previous Period (Year) sales
+			CALCULATE (
+			    [AC],
+			    SAMEPERIODLASTYEAR ( 'Calendar'[Date] ),
+			    ALL ( 'Calendar' )
+			)
+			
+			```
+		formatString: #,0
+		lineageTag: 9ab4d7b8-946d-41f5-b8b1-5acdb53c1d7f
+
+		annotation PBI_FormatHint = {"isDecimal":true}
+
+	/// This measure is the sum of column 'Data'[AC]
+	measure AC =
+			//Actual Period (Year) sales
+			ROUNDDOWN(Sum('Orders'[Amounts]),0)
+		formatString: #,0
+		lineageTag: a7b9b6f3-d7e0-4e1e-bcf3-fc68b41cc5f4
+
+		annotation PBI_FormatHint = {"isDecimal":true}
+
+	/// This measure is the sum of column 'Data'[DeltaPY]
+	measure 'Δ PY' =
+			//Differnce between actual period (year) sales and previous period (year) sales: AC-PY
+			[AC] - [PY]
+		formatString: +#,0;-#,0;#,0
+		lineageTag: 216dcb04-6728-4f9e-83c5-c94a355aaea0
+
+	measure 'Δ PY %' =
+			//Differnce between actual period (year) sales and previous period (year) sales: AC-PY
+			([AC] - [PY]) / [PY] *100
+		formatString: 0.0\ %;-0.0\ %;0.0\ %
+		lineageTag: f1a61d6c-5bac-429b-8301-144c61187718
+
+	measure 'Last Refresh Measure' = "Last Refresh: " & MAX('Last Refresh'[Last Refreshes])
+		displayFolder: Meta
+		lineageTag: fcbf25c8-9cd9-4538-aa63-153f897f3fe4
+
+	column 'List of Measures'
+		dataType: string
+		isHidden
+		lineageTag: 0b397fe2-3fea-495e-a6c1-6725a714824f
+		summarizeBy: none
+		isNameInferred
+		isDataTypeInferred
+		sourceColumn: [List of Measures]
+
+		annotation SummarizationSetBy = Automatic
+
+	partition Measure = calculated
+		mode: import
+		source =
+				DATATABLE(
+				    "List of Measures", STRING,     {
+				        {"potential description of measures in table"}
+				    }
+				)
+
+	annotation PBI_Id = 06bb4c5d0b2f4d569307e96b42ff0abb
+

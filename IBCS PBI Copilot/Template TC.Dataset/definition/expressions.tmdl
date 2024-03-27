@@ -1,0 +1,56 @@
+expression 'Excel File Path' = "C:\Users\akn\OneDrive - highcoordination.de\Dokumente\08. Power BI\Interview HICO\Northwind_2023.xls" meta [IsParameterQuery=true, Type="Any", IsParameterQueryRequired=true]
+	lineageTag: 39d373a8-f35a-418c-976c-0aa2cb7bb957
+	queryGroup: '01 Parameters'
+
+	annotation PBI_NavigationStepName = Navigation
+
+	annotation PBI_ResultType = Text
+
+expression 'Orders Source' =
+		let
+		    Source = Excel.Workbook(File.Contents(#"Excel File Path"), null, true),
+		    Orders1 = Source{[Name="Orders"]}[Data],
+		    #"Promoted Headers" = Table.PromoteHeaders(Orders1, [PromoteAllScalars=true]),
+		    #"Changed Type with Locale" = Table.TransformColumnTypes(#"Promoted Headers", {{"OrderDate", type date}}, "de-DE"),
+		    #"Changed Type with Locale1" = Table.TransformColumnTypes(#"Changed Type with Locale", {{"RequiredDate", type date}}, "de-DE"),
+		    #"Changed Type with Locale2" = Table.TransformColumnTypes(#"Changed Type with Locale1", {{"ShippedDate", type date}}, "de-DE"),
+		    #"Changed Type" = Table.TransformColumnTypes(#"Changed Type with Locale2",{{"OrderID", Int64.Type}, {"CustomerID", type text}, {"EmployeeID", Int64.Type}, {"OrderDate", type date}, {"RequiredDate", type date}, {"ShippedDate", type date}, {"ShipVia", Int64.Type}, {"Freight", type number}, {"ShipName", type text}, {"ShipAddress", type text}, {"ShipCity", type text}, {"ShipRegion", type text}, {"ShipPostalCode", type text}, {"ShipCountry", type text}, {"Shipping Address is Different", type logical}})
+		in
+		    #"Changed Type"
+	lineageTag: dc9ffe8a-e5b1-415b-ba6c-8a169c65714d
+	queryGroup: '02 Datasource'
+
+	annotation PBI_NavigationStepName = Navigation
+
+	annotation PBI_ResultType = Table
+
+expression 'Categories Source' =
+		let
+		    Source = Excel.Workbook(File.Contents(#"Excel File Path"), null, true),
+		    Categories1 = Source{[Name="Categories"]}[Data],
+		    #"Promoted Headers" = Table.PromoteHeaders(Categories1, [PromoteAllScalars=true]),
+		    #"Changed Type" = Table.TransformColumnTypes(#"Promoted Headers",{{"CategoryID", Int64.Type}, {"CategoryName", type text}, {"Description", type text}, {"Picture", type text}})
+		in
+		    #"Changed Type"
+	lineageTag: 47ca867b-2ed8-415a-aadd-69b509a24bf2
+	queryGroup: '02 Datasource'
+
+	annotation PBI_NavigationStepName = Navigation
+
+	annotation PBI_ResultType = Table
+
+expression 'Suppliers Source' =
+		let
+		    Source = Excel.Workbook(File.Contents(#"Excel File Path"), null, true),
+		    Suppliers1 = Source{[Name="Suppliers"]}[Data],
+		    #"Promoted Headers" = Table.PromoteHeaders(Suppliers1, [PromoteAllScalars=true]),
+		    #"Changed Type" = Table.TransformColumnTypes(#"Promoted Headers",{{"SupplierID", Int64.Type}, {"CompanyName", type text}, {"ContactName", type text}, {"ContactTitle", type text}, {"Address", type text}, {"City", type text}, {"Region", type text}, {"PostalCode", type text}, {"Country", type text}, {"Phone", type text}, {"Fax", type text}, {"HomePage", type text}})
+		in
+		    #"Changed Type"
+	lineageTag: 19731b24-1e42-43a6-8b32-d0b0f3e152e8
+	queryGroup: '02 Datasource'
+
+	annotation PBI_NavigationStepName = Navigation
+
+	annotation PBI_ResultType = Table
+

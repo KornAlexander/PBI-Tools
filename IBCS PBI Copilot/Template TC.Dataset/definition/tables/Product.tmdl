@@ -1,0 +1,148 @@
+table Product
+	lineageTag: 32364d21-b7e3-402b-9c97-f1b7b0572578
+
+	column ProductID
+		dataType: int64
+		isHidden
+		formatString: 0
+		lineageTag: 381677a7-8bf1-4439-af10-aa88e688b85f
+		summarizeBy: none
+		sourceColumn: ProductID
+
+		annotation SummarizationSetBy = Automatic
+
+	column ProductName
+		dataType: string
+		lineageTag: e0693daf-50ff-4f40-9a1a-0cffcc428b21
+		summarizeBy: none
+		sourceColumn: ProductName
+
+		annotation SummarizationSetBy = Automatic
+
+	column SupplierID
+		dataType: int64
+		isHidden
+		formatString: 0
+		lineageTag: 6ea9e386-ac44-4599-9ce2-1898862e038c
+		summarizeBy: none
+		sourceColumn: SupplierID
+
+		annotation SummarizationSetBy = Automatic
+
+	column QuantityPerUnit
+		dataType: string
+		isHidden
+		lineageTag: bb91da33-ab7c-4c4f-99f7-d7fc418f496d
+		summarizeBy: none
+		sourceColumn: QuantityPerUnit
+
+		annotation SummarizationSetBy = Automatic
+
+	column UnitPrice
+		dataType: double
+		isHidden
+		lineageTag: 325e6938-ad1a-4746-83b1-1fc99c4849a8
+		summarizeBy: none
+		sourceColumn: UnitPrice
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column UnitsInStock
+		dataType: int64
+		isHidden
+		formatString: 0
+		lineageTag: b164e56f-a7ab-4210-90d6-234114f4552b
+		summarizeBy: none
+		sourceColumn: UnitsInStock
+
+		annotation SummarizationSetBy = Automatic
+
+	column UnitsOnOrder
+		dataType: int64
+		isHidden
+		formatString: 0
+		lineageTag: 3badf83b-de84-4d73-b295-cb03c3165a0d
+		summarizeBy: none
+		sourceColumn: UnitsOnOrder
+
+		annotation SummarizationSetBy = Automatic
+
+	column ReorderLevel
+		dataType: int64
+		isHidden
+		formatString: 0
+		lineageTag: eb43a2c9-5161-4b00-8639-af722ae2511c
+		summarizeBy: none
+		sourceColumn: ReorderLevel
+
+		annotation SummarizationSetBy = Automatic
+
+	column Discontinued
+		dataType: string
+		isHidden
+		lineageTag: 6b2c1bc5-287e-40ce-b7d2-56d7e9fac167
+		summarizeBy: none
+		sourceColumn: Discontinued
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Attribute 1'
+		dataType: string
+		lineageTag: 6c3f8fce-fda0-41e4-8828-8bc5c06d4e5d
+		summarizeBy: none
+		sourceColumn: Attribute 1
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Category Description'
+		dataType: string
+		isHidden
+		lineageTag: cdb094da-a027-443e-be67-f9a9c367c2bf
+		summarizeBy: none
+		sourceColumn: Category Description
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Category Picture'
+		dataType: string
+		isHidden
+		lineageTag: ccba6816-e766-445c-b1a2-c24071561183
+		summarizeBy: none
+		sourceColumn: Category Picture
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Supplier Company'
+		dataType: string
+		isHidden
+		lineageTag: e26e1776-758c-4297-8455-78e015e587bc
+		summarizeBy: none
+		sourceColumn: Supplier Company
+
+		annotation SummarizationSetBy = Automatic
+
+	partition Product = m
+		mode: import
+		queryGroup: '03 Fact and Dimension Tables'
+		source =
+				let
+				    Source = Excel.Workbook(File.Contents(#"Excel File Path"), null, true),
+				    Product1 = Source{[Name="Product"]}[Data],
+				    #"Promoted Headers" = Table.PromoteHeaders(Product1, [PromoteAllScalars=true]),
+				    #"Changed Type" = Table.TransformColumnTypes(#"Promoted Headers",{{"ProductID", Int64.Type}, {"ProductName", type text}, {"SupplierID", Int64.Type}, {"CategoryID", Int64.Type}, {"QuantityPerUnit", type text}, {"UnitPrice", type number}, {"UnitsInStock", Int64.Type}, {"UnitsOnOrder", Int64.Type}, {"ReorderLevel", Int64.Type}, {"Discontinued", type text}}),
+				    #"Merged Queries" = Table.NestedJoin(#"Changed Type", {"CategoryID"}, #"Categories Source", {"CategoryID"}, "Categories Source", JoinKind.LeftOuter),
+				    #"Expanded Categories Source" = Table.ExpandTableColumn(#"Merged Queries", "Categories Source", {"CategoryName", "Description", "Picture"}, {"CategoryName", "Description", "Picture"}),
+				    #"Renamed Columns" = Table.RenameColumns(#"Expanded Categories Source",{{"Description", "Category Description"}, {"CategoryName", "Category Name"}, {"Picture", "Category Picture"}}),
+				    #"Removed Columns" = Table.RemoveColumns(#"Renamed Columns",{"CategoryID"}),
+				    #"Merged Queries1" = Table.NestedJoin(#"Removed Columns", {"SupplierID"}, #"Suppliers Source", {"SupplierID"}, "Suppliers", JoinKind.LeftOuter),
+				    #"Expanded Suppliers" = Table.ExpandTableColumn(#"Merged Queries1", "Suppliers", {"CompanyName"}, {"Supplier Company"}),
+				    #"Renamed Columns1" = Table.RenameColumns(#"Expanded Suppliers",{{"Category Name", "Attribute 1"}})
+				in
+				    #"Renamed Columns1"
+
+	annotation PBI_ResultType = Table
+
+	annotation PBI_NavigationStepName = Navigation
+
