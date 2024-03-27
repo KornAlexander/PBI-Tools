@@ -43,10 +43,6 @@ table Measure
 		formatString: 0.0\ %;-0.0\ %;0.0\ %
 		lineageTag: f1a61d6c-5bac-429b-8301-144c61187718
 
-	measure 'Last Refresh Measure' = "Last Refresh: " & MAX('Last Refresh'[Last Refreshes])
-		displayFolder: Meta
-		lineageTag: fcbf25c8-9cd9-4538-aa63-153f897f3fe4
-
 	column 'List of Measures'
 		dataType: string
 		isHidden

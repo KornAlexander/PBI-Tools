@@ -1,6 +1,10 @@
 table 'Last Refresh'
 	lineageTag: 36e03ad0-c262-4f55-8e13-04e4eb9c12b0
 
+	measure 'Last Refresh Measure' = "Last Refresh: " & MAX('Last Refresh'[Last Refreshes])
+		displayFolder: Meta
+		lineageTag: fcbf25c8-9cd9-4538-aa63-153f897f3fe4
+
 	column 'Last Refreshes'
 		dataType: string
 		lineageTag: a606605d-7fba-40b4-9321-58268c6817cc
