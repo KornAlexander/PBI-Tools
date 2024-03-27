@@ -1,17 +1,22 @@
 table Measure
 	lineageTag: 6e102c24-8229-4832-b917-5b114177f2cf
 
-	column 'Put Your Measure in this Table and Hide this Columns'
+	column 'List of Measures'
 		dataType: string
-		lineageTag: f6f788f9-6e3c-4113-aa8b-4abb335dd758
+		isHidden
+		lineageTag: 0b397fe2-3fea-495e-a6c1-6725a714824f
 		summarizeBy: none
-		sourceColumn: Name of Measure
+		isNameInferred
+		isDataTypeInferred
+		sourceColumn: [List of Measures]
 
-	partition Measure = m
+		annotation SummarizationSetBy = Automatic
+
+	partition Measure = calculated
 		mode: import
 		source =
-				let
-				        Source = Table.FromRows(Json.Document(Binary.Decompress(Binary.FromText("i44FAA==", BinaryEncoding.Base64), Compression.Deflate)), let _t = ((type nullable text) meta [Serialized.Text = true]) in type table [#"Name of Measure" = _t, Description = _t])
-				    in
-				        Source
-
+				DATATABLE(
+				    "List of Measures", STRING,     {
+				        {"potential description of measures in table"}
+				    }
+				)
