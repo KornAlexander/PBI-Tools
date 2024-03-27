@@ -1,0 +1,3 @@
+relationship ec4882df-285f-4881-b86c-999e239836d0
+	fromColumn: Orders.OrderDate
+	toColumn: Calendar.Date
