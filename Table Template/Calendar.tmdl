@@ -123,7 +123,6 @@ table Calendar
 
 	partition Calendar = m
 		mode: import
-		queryGroup: '03 Fact and Dimension Tables'
 		source =
 				let
 				    // configurations start
