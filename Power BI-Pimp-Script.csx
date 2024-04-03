@@ -32,7 +32,7 @@ using System.Windows.Forms;
 // Here you can modify the names
 string tableNameEmptyMeasure = "Measure";
 string tableNameLastRefresh = "Last Refresh";
-string calctableCalendar = "Calendar CalcTable";
+string calctableCalendar = "CalendarCalcTable";
 string columnNameLastRefresh = "Last Refreshes";
 string LastRefreshMeasureName = "Last Refresh Measure";
 var FromYear = "2018";
