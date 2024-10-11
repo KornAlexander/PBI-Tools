@@ -69,7 +69,7 @@ if (MessageBox.Show("This script will backup your Macros and append the HICO-Gro
             File.Copy(desktopBackupMacroActionsFile, appDataMacroActionsPath, true);
             operationCompleted = true;
 
-            MessageBox.Show("Adding the HICO-Group Data Model Toolbox was successful. (The MacroActions.json was copied from the desktop to appdata.) RESTART Tabular Editor now.", "Operation Summary", MessageBoxButtons.OK, MessageBoxIcon.Information);
+            MessageBox.Show("Adding the HICO-Group Data Model Toolbox was successful. The MacroActions.json was copied from the Github repo to your appdata. Additionally the files are on your desktop. RESTART Tabular Editor now.", "Operation Summary", MessageBoxButtons.OK, MessageBoxIcon.Information);
             return;
         }
         else
@@ -83,7 +83,7 @@ if (MessageBox.Show("This script will backup your Macros and append the HICO-Gro
             ? "Backup successful: " + backupFilePath + "\n"
             : "No existing MacroActions.json file was found for backup.\n";
         message += operationCompleted
-        ? "Operation Successful: The HICO-Group Data Model Toolbox was added successfully to your existing Macros. (Macros in HICODataModelToolbox.txt appended to MacroActions.json.) RESTART Tabular Editor now."
+        ? "Operation Successful: The HICO-Group Data Model Toolbox was added successfully to your existing Macros. (Macros from the Github repo from file HICODataModelToolbox.txt appended to MacroActions.json.) RESTART Tabular Editor now."
             : "Operation failed.";
 
         MessageBox.Show(message, "Operation Summary", MessageBoxButtons.OK, MessageBoxIcon.Information);
