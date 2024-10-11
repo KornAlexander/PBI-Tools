@@ -3,14 +3,26 @@ using Microsoft.VisualBasic;
 using System.IO;
 using System.Windows.Forms;
 
+
 string exeDirectory = AppDomain.CurrentDomain.BaseDirectory;
 string exeName = Path.GetFileNameWithoutExtension(AppDomain.CurrentDomain.FriendlyName); // Get the executable name without the extension
+string URLdesktopBackupMacroActionsFile = "https://raw.githubusercontent.com/KornAlexander/PBI-Tools/refs/heads/main/Data%20Model%20Toolbox/DataModelToolbox.txt";
+string URLdesktopMacroActionsFile = "https://raw.githubusercontent.com/KornAlexander/PBI-Tools/refs/heads/main/Data%20Model%20Toolbox/MacroActions.json";
+
+System.Net.WebClient w = new System.Net.WebClient();
+string desktopPath = System.Environment.GetFolderPath(System.Environment.SpecialFolder.Desktop);
+string downloadLocBackup = Path.Combine(desktopPath, "HICODataModelToolbox.txt");
+string downloadLocMacroActions = Path.Combine(desktopPath, "MacroActions.json");
+
+// Download files
+w.DownloadFile(URLdesktopBackupMacroActionsFile, downloadLocBackup);
+w.DownloadFile(URLdesktopMacroActionsFile, downloadLocMacroActions);
 string desktopMacroActionsFile = Path.Combine(System.Environment.GetFolderPath(System.Environment.SpecialFolder.Desktop), "HICODataModelToolbox.txt");
 string desktopBackupMacroActionsFile = Path.Combine(System.Environment.GetFolderPath(System.Environment.SpecialFolder.Desktop), "MacroActions.json");
 string timestamp = DateTime.Now.ToString("yyyyMMddHHmmss");
 
 // Determine if the executable is TabularEditor or TabularEditor3 and set the appropriate AppData folder
-string backupDirectory = exeName.Contains("TabularEditor3") 
+string backupDirectory = exeName.Contains("TabularEditor3")
     ? Path.Combine(System.Environment.GetFolderPath(System.Environment.SpecialFolder.LocalApplicationData), "TabularEditor3")
     : Path.Combine(System.Environment.GetFolderPath(System.Environment.SpecialFolder.LocalApplicationData), "TabularEditor");
 
@@ -21,7 +33,7 @@ if (!Directory.Exists(backupDirectory))
 }
 
 // Prompt the user to confirm the operation
-if (MessageBox.Show("This script will backup your Macros and append the HICO-Group Macro toolbox to your collection. Macros will NOT be replaced. Make sure both files (MacroActions.json and HICODataModelToolbox.txt) are saved on your desktop. Proceed?", 
+if (MessageBox.Show("This script will backup your Macros and append the HICO-Group Macro toolbox to your collection. Macros will NOT be replaced. Both needed files (MacroActions.json and HICODataModelToolbox.txt) will be saved to your desktop. Do you would like to proceed?",
                     "Backup and Append Confirmation", MessageBoxButtons.YesNo, MessageBoxIcon.Question) == DialogResult.Yes)
 {
     if (!File.Exists(desktopMacroActionsFile))
@@ -67,11 +79,11 @@ if (MessageBox.Show("This script will backup your Macros and append the HICO-Gro
         }
 
         // Display operation result
-        string message = backupCompleted 
-            ? "Backup successful: " + backupFilePath + "\n" 
+        string message = backupCompleted
+            ? "Backup successful: " + backupFilePath + "\n"
             : "No existing MacroActions.json file was found for backup.\n";
-        message += operationCompleted 
-        ? "Operation Successful: The HICO-Group Data Model Toolbox was added successfully to your existing Macros. (Macros in HICODataModelToolbox.txt appended to MacroActions.json.) RESTART Tabular Editor now." 
+        message += operationCompleted
+        ? "Operation Successful: The HICO-Group Data Model Toolbox was added successfully to your existing Macros. (Macros in HICODataModelToolbox.txt appended to MacroActions.json.) RESTART Tabular Editor now."
             : "Operation failed.";
 
         MessageBox.Show(message, "Operation Summary", MessageBoxButtons.OK, MessageBoxIcon.Information);
