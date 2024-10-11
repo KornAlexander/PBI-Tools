@@ -136,7 +136,7 @@
     },
     {
       "Id": 18,
-      "Name": "3. Calc Table\\1. Create Calc Calendar Table",
+      "Name": "3. Calc Table\\1. Create Calc Calendar Table (TE3)",
       "Enabled": "true",
       "Execute": "#r \"Microsoft.VisualBasic\"\nusing Microsoft.VisualBasic;\nusing System.Windows.Forms;\n\nstring calctableCalendar = Interaction.InputBox(\"Provide the name of the date dimension table\", \"Table Name\", \"CalendarCalcTable\");\n\n\n\n    // Define the DAX expression for the calculated table\n    string tableExpression = @\"\nVAR all_dates = CALENDARAUTO()\nRETURN\n    ADDCOLUMNS(\n        all_dates,\n        \"\"DateKey\"\", VALUE(FORMAT([Date], \"\"YYYYMMDD\"\")),\n        \"\"Year\"\", YEAR([Date]),\n        \"\"Quarter\"\", QUARTER([Date]),\n        \"\"Month\"\", MONTH([Date]),\n        \"\"End of Month\"\", EOMONTH([Date], 0),\n        \"\"Week of Year\"\", WEEKNUM([Date]),\n        \"\"Weekday\"\", WEEKDAY([Date])\n    )\n\";\n\n    // Add the calculated table to the model\n    var table = Model.AddCalculatedTable(calctableCalendar, tableExpression);\n        table.DataCategory = \"Time\";\n\n    // Modify the existing \"Date\" column\n    var dateColumn = table.Columns[\"Date\"];\n    dateColumn.DataType = DataType.DateTime;\n    dateColumn.IsKey = true; // Ensure this is the key column",
       "Tooltip": "",
@@ -146,7 +146,7 @@
       "Id": 19,
       "Name": "3. Calc Table\\2. Create Empty Measure Table",
       "Enabled": "true",
-      "Execute": "// Create a calculated table with a single column which is hidden:\nvar table = Model.AddCalculatedTable(\"Measure\", \"{0}\");\ntable.Columns[0].IsHidden = true;\n",
+      "Execute": "// ATTENTION FOR TE2 Users: Script needs modification AND needs to be run in 2 steps\n\n// First Step: Add Table\nvar table = Model.AddCalculatedTable(\"Measure\", \"{0}\"); \n\n// Second Step: JUST FOR TE2 Save Data Model Changes\n\n// Third Step: Hides the column, uncomment the next line and execute it separately\n//var table = Model.Tables[\"Measure\"]; //uncomment this line for TE2\ntable.Columns[0].IsHidden = true;",
       "Tooltip": "",
       "ValidContexts": "Model"
     },
@@ -261,4 +261,20 @@
       "Execute": "var newMeasures = new List<Measure>();\n    \nforeach (var selectedMeasure in Selected.Measures)\n    {\n    // Get the selected measure\n    var measuresTable = Model.Tables[\"Measure\"];\n    var Kalendartable = \"Datum\";\n    var DateColumn = \"Datum\";\n\n    // Define the new measure name and expression\n    string newMeasureName1 = selectedMeasure.Name + \" PY\";\n    string newMeasureName2 = selectedMeasure.Name + \" Δ PY\";\n    string newMeasureName3 = selectedMeasure.Name + \" Δ PY %\";\n    \n    string newExpression1 = \n        \"CALCULATE(\" +\n        \"[\"+selectedMeasure.Name+\"]\" + \", \" \n        +\"SAMEPERIODLASTYEAR(\"+Kalendartable+\"[\"+DateColumn+\"]))\";\n    string newExpression2 = \n        \"[\"+selectedMeasure.Name+\"] - \" + \"[\"+selectedMeasure.Name+\" PY]\";\n    string newExpression3 = \n        \"DIVIDE([\"+selectedMeasure.Name+\"] - \" + \"[\"+selectedMeasure.Name+\" PY], [\"+selectedMeasure.Name+\"])\";\n\n\n    // Create the new measure in the same table as the selected measure\n    var newMeasure1 = measuresTable.AddMeasure(newMeasureName1, newExpression1);\n    var newMeasure2 = measuresTable.AddMeasure(newMeasureName2, newExpression2);\n    var newMeasure3 = measuresTable.AddMeasure(newMeasureName3, newExpression3);\n    \n    // Set the display folder for the new measure\n    //newMeasure1.DisplayFolder = \"Just Created \" + selectedMeasure.Name;\n    \n    newMeasure1.FormatString = selectedMeasure.FormatString;\n    newMeasures.Add(newMeasure1);\n    newMeasures.Add(newMeasure2);\n    newMeasures.Add(newMeasure3);\n}\n\nFormatDax(newMeasures, shortFormat: true, skipSpaceAfterFunctionName: true);",
       "Tooltip": "",
       "ValidContexts": "Measure"
+    },
+    {
+      "Id": 34,
+      "Name": "3. Calc Table\\1. Create Calc Calendar Table (TE2)\\2. Mark as Date Table",
+      "Enabled": "true",
+      "Execute": "#r \"Microsoft.VisualBasic\"\nusing Microsoft.VisualBasic;\nusing System.Windows.Forms;\n\n// Find the table with the data category \"Time\"\nvar CalendarTable = Model.Tables.FirstOrDefault(table => table.DataCategory == \"Time\");\n\nif (CalendarTable == null)\n{\n    string tableName = Interaction.InputBox(\"Provide the name of the date dimension table\", \"Table Name\", \"Calendar\");\n    CalendarTable = Model.Tables.FirstOrDefault(table => table.Name == tableName);\n\n    if (CalendarTable == null)\n    {\n        MessageBox.Show(\"The table you provided does not exist in the model.\");\n        return;\n    }\n}\n\n// Check if a column named \"Date\" exists in the CalendarTable\nstring dateColumnName = \"Date\";\nvar dateColumn = CalendarTable.Columns.FirstOrDefault(col => col.Name == dateColumnName);\n\nif (dateColumn == null)\n{\n    // If no \"Date\" column is found, prompt the user for input\n    dateColumnName = Interaction.InputBox(\"The 'Date' column was not found. Provide the name of the date column.\", \"Column Name\", \"Date\");\n    dateColumn = CalendarTable.Columns.FirstOrDefault(col => col.Name == dateColumnName);\n\n    if (dateColumn == null)\n    {\n        MessageBox.Show(\"The column you provided does not exist in the model.\");\n        return;\n    }\n}\n\n// Modify the found column (or user-provided column)\ndateColumn.DataType = DataType.DateTime;\ndateColumn.IsKey = true; // Ensure this is the key column\n",
+      "Tooltip": "",
+      "ValidContexts": "Model"
+    },
+    {
+      "Id": 35,
+      "Name": "3. Calc Table\\1. Create Calc Calendar Table (TE2)\\1. Create Table",
+      "Enabled": "true",
+      "Execute": "#r \"Microsoft.VisualBasic\"\nusing Microsoft.VisualBasic;\nusing System.Windows.Forms;\n\nstring calctableCalendar = Interaction.InputBox(\"Provide the name of the date dimension table\", \"Table Name\", \"CalendarCalcTable\");\n\n\n\n    // Define the DAX expression for the calculated table\n    string tableExpression = @\"\nVAR all_dates = CALENDARAUTO()\nRETURN\n    ADDCOLUMNS(\n        all_dates,\n        \"\"DateKey\"\", VALUE(FORMAT([Date], \"\"YYYYMMDD\"\")),\n        \"\"Year\"\", YEAR([Date]),\n        \"\"Quarter\"\", QUARTER([Date]),\n        \"\"Month\"\", MONTH([Date]),\n        \"\"End of Month\"\", EOMONTH([Date], 0),\n        \"\"Week of Year\"\", WEEKNUM([Date]),\n        \"\"Weekday\"\", WEEKDAY([Date])\n    )\n\";\n\n    // Add the calculated table to the model\n    var table = Model.AddCalculatedTable(calctableCalendar, tableExpression);\n        table.DataCategory = \"Time\";\n\n",
+      "Tooltip": "",
+      "ValidContexts": "Model"
     }
