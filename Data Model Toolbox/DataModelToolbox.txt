@@ -1,4 +1,4 @@
-    ,  "Id": 1,
+    ,{  "Id": 1,
       "Name": "1. Measure Create\\1. Add From Column\\1. All columns ending with key or ID: Set Summarize By to None",
       "Enabled": "true",
       "Execute": "// Change SummarizeBy to None for All ID and Key columns ***********************************************************\n\n    foreach (var table in Model.Tables)\n    {\n        foreach (var column in table.Columns)\n        {\n            if (column.Name.EndsWith(\"Key\") || column.Name.EndsWith(\"ID\"))\n            {\n                column.SummarizeBy = AggregateFunction.None;\n            }\n        }\n    }\n",
