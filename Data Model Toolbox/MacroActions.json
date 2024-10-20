@@ -168,7 +168,7 @@
       "Tooltip": "",
       "ValidContexts": "Model"
     },
-	{
+    {
       "Id": 22,
       "Name": "4. Calc Group\\3. Time Intelligence with Value Parameter",
       "Enabled": "true",
@@ -344,7 +344,7 @@
       "Tooltip": "Will find & replace a substring in the model's measures DAX expression.",
       "ValidContexts": "Model"
     },
-	{
+    {
       "Id": 49,
       "Name": "8. Bernats Repo\\3. Calc Group\\Activate Relationship Calc Group",
       "Enabled": "true",
@@ -616,7 +616,7 @@
       "Tooltip": "creates sum measures for selected columns",
       "ValidContexts": "Measure"
     },
-	{
+    {
       "Id": 83,
       "Name": "3. Calc Table\\3. Create Value Parameter 1 to 10 (TE3)",
       "Enabled": "true",
@@ -642,7 +642,7 @@
     },
     {
       "Id": 87,
-      "Name": "6. Other\\Document Model",
+      "Name": "6. Other\\Document Model\\Step 1: Create Tables",
       "Enabled": "true",
       "Execute": "#r \"Microsoft.VisualBasic\"\nusing Microsoft.VisualBasic;\nusing System.Windows.Forms;\n\nstring calctableTables = \"_Tables\";\nstring calctableColumns = \"_Columns\";\nstring calctableMeasure = \"_Measure\";\nstring calctableRelationships = \"_Relationships\";\n\n// Define the DAX expression for the calculated table\nstring tableExpression1 = \"INFO.VIEW.TABLES()\";\nstring tableExpression2 = \"INFO.VIEW.COLUMNS()\";\nstring tableExpression3 = \"INFO.VIEW.MEASURES()\";\nstring tableExpression4 = \"INFO.VIEW.RELATIONSHIPS()\";\n\n// Add the calculated table to the model\nvar table1 = Model.AddCalculatedTable(calctableTables, tableExpression1);\nvar table2 = Model.AddCalculatedTable(calctableColumns, tableExpression2);\nvar table3 = Model.AddCalculatedTable(calctableMeasure, tableExpression3);\nvar table4 = Model.AddCalculatedTable(calctableRelationships, tableExpression4);",
       "Tooltip": "",
@@ -650,9 +650,9 @@
     },
     {
       "Id": 88,
-      "Name": "6. Other\\Document Model Relationship",
+      "Name": "6. Other\\Document Model\\Step 2: Create Relationship and Hide Tables",
       "Enabled": "true",
-      "Execute": "// Create the relationship\nvar rel = Model.AddRelationship();\n// Assign the \"many\" side (from _Columns[Table])\nrel.FromColumn = Model.Tables[\"_Columns\"].Columns[\"Table\"];\n// Assign the \"one\" side (to _Tables[Table Name])\nrel.ToColumn = Model.Tables[\"_Tables\"].Columns[\"Name\"];\n// Set the relationship as active\nrel.IsActive = true;\n// Name the relationship\nrel.Name = \"Relationship between _Columns and _Tables\";",
+      "Execute": "// Make Sure to SAVE THE MODEL after you have added the four info tables\nvar rel = Model.AddRelationship();\n// Assign the \"many\" side (from _Columns[Table])\nrel.FromColumn = Model.Tables[\"_Columns\"].Columns[\"Table\"];\n// Assign the \"one\" side (to _Tables[Table Name])\nrel.ToColumn = Model.Tables[\"_Tables\"].Columns[\"Name\"];\n// Set the relationship as active\nrel.IsActive = true;\n// Name the relationship\nrel.Name = \"Relationship between _Columns and _Tables\";\n\nModel.Tables[\"_Tables\"].IsHidden = true;\nModel.Tables[\"_Columns\"].IsHidden = true;\nModel.Tables[\"_Relationships\"].IsHidden = true;\nModel.Tables[\"_Measure\"].IsHidden = true;",
       "Tooltip": "",
       "ValidContexts": "Model"
     }
