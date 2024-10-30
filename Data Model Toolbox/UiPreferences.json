@@ -1,0 +1,184 @@
+{
+  "ShowToolbarsOnFloatingWindows": true,
+  "FindReplaceDialogOpacity": 0.7,
+  "ShowWhatsNew": true,
+  "HideInactiveToolbars": true,
+  "HideInactiveMenus": true,
+  "HideVersionNumber": false,
+  "LockMenusAndToolbars": true,
+  "Skin": "Basic",
+  "SkinPalette": "",
+  "WorkspaceSerializationVersion": 2,
+  "DaxscillaPreferences": {
+    "UseSqlBiDaxFormatter": false,
+    "DaxFunctionDocumentationUrl": "https://dax.guide/{0}",
+    "CodeAssistPreferences": {
+      "PreselectFromPastUsage": true,
+      "ShowCalltips": true,
+      "CalltipsMode": 0,
+      "CalltipPosition": 0,
+      "KpiAutoCompleteMode": 1,
+      "AutoCompleteFilterMode": 2,
+      "AutoBraceEnabled": true,
+      "WrapSelection": true,
+      "AutoIndentNewline": true,
+      "AutoFormatOnClose": true,
+      "CorrectObjectCasing": true,
+      "CorrectKeywordFunctionCasing": true,
+      "KeywordsCasing": 0,
+      "FunctionsCasing": 0,
+      "AutoDaxFormatting": true,
+      "FixQualifiers": true,
+      "AutoFormatEnabled": true,
+      "ShowAutoComplete": true,
+      "AutoCompleteMode": 1,
+      "AutoCompleteHandleDelete": true,
+      "AsyncAutoCompleteParsing": true,
+      "ShowNotRecommendedFunctions": false
+    },
+    "FormattingOptions": {
+      "AlwaysPrefixExtensionColumns": false,
+      "AlwaysQuoteTables": false,
+      "IndentWidth": 4,
+      "LongFormatMaxChars": 120,
+      "NewLineAfterFunction": false,
+      "NewLineBeforeOperator": true,
+      "ParenthesisSpacing": true,
+      "RemoveExtraLineBreaks": false,
+      "ShortFormatMaxChars": 60,
+      "SpaceAfterFunction": false,
+      "UseTabs": false
+    },
+    "DaxLocale": 0,
+    "UseHyphenComments": false,
+    "UseTabs": false,
+    "DefineObject_IncludeCommentHeader": true,
+    "QueryDefineObject_IncludeCommentHeader": true,
+    "SemanticEngineFeatureOverrides": {
+      "AllowMultiColumnPredicates": "Default",
+      "AllowDirectionalCrossFilter": "Default",
+      "AllowDateLiterals": "Default",
+      "AllowCalculateShortcutMeasuresAndAggFunctions": "Default",
+      "AsEngineVersion": "Default"
+    },
+    "ShowWarningUnusedVariable": true,
+    "DaxFormatterDefault": 0,
+    "SortItemsInDaxScript": false,
+    "VisibleWhitespace": false,
+    "VisibleLineNumbers": true,
+    "VisibleCodeFolding": true,
+    "IndentationGuides": true
+  },
+  "SqlEditorPreferences": {
+    "VisibleWhitespace": false,
+    "VisibleLineNumbers": true,
+    "VisibleCodeFolding": true,
+    "UseTabs": false,
+    "IndentationGuides": true
+  },
+  "MEditorPreferences": {
+    "VisibleWhitespace": false,
+    "VisibleLineNumbers": true,
+    "VisibleCodeFolding": true,
+    "UseTabs": false,
+    "IndentationGuides": true
+  },
+  "CSharpEditorPreferences": {
+    "VisibleWhitespace": false,
+    "VisibleLineNumbers": true,
+    "VisibleCodeFolding": true,
+    "UseTabs": false,
+    "IndentationGuides": true
+  },
+  "EditorPreferences": {
+    "MultiPaste": true
+  },
+  "DebuggerPreferences": {
+    "IncludeTableExpressionsInLocals": false,
+    "IncludeFunctionArgsInLocals": true,
+    "PopupWatchInspector": false,
+    "PopupLocalsInspector": true
+  },
+  "KeyboardCustomizations": {
+    "Custom": {
+      "Macros.Macro_1": "Ctrl+Shift+1",
+      "Macros.Macro_10": "Ctrl+Alt+0",
+      "Macros.Macro_14": "Ctrl+Alt+4",
+      "Macros.Macro_15": "Ctrl+Alt+5",
+      "Macros.Macro_16": "Ctrl+Alt+6",
+      "Macros.Macro_17": "Ctrl+Alt+7",
+      "Macros.Macro_18": "Ctrl+Alt+8",
+      "Macros.Macro_19": "Ctrl+Alt+9",
+      "Macros.Macro_2": "Ctrl+Shift+2",
+      "Macros.Macro_20": "Ctrl+Alt+Shift+0",
+      "Macros.Macro_21": "Ctrl+Alt+Shift+1",
+      "Macros.Macro_22": "Ctrl+Alt+Shift+2",
+      "Macros.Macro_3": "Ctrl+Shift+3",
+      "Macros.Macro_4": "Ctrl+Shift+4",
+      "Macros.Macro_5": "Ctrl+Shift+5",
+      "Macros.Macro_6": "Ctrl+Shift+6",
+      "Macros.Macro_7": "Ctrl+Shift+7",
+      "Macros.Macro_8": "Ctrl+Shift+8",
+      "Macros.Macro_87": "Ctrl+Alt+NumPad1",
+      "Macros.Macro_88": "Ctrl+Alt+NumPad2",
+      "Macros.Macro_9": "Ctrl+Shift+9"
+    }
+  },
+  "FindReplaceSettings": {
+    "MatchCase": false,
+    "WholeWord": false,
+    "AllowBackslash": false,
+    "AllowRegex": false,
+    "FindMru": [
+      "$",
+      "DiscourageImplicitMeasures",
+      "KeyColumnsAggregation",
+      "ExplicitMeasure",
+      "dialogResult13",
+      " Summarize By",
+      "FormatDAX",
+      "dialogResult6",
+      "format all measure",
+      "kalendarTable",
+      "CalendarTable",
+      "Table",
+      "unit",
+      "sourcecolumn",
+      "dateColumn",
+      "GenerateDateDimensionTable",
+      "dialogresult2",
+      "mark",
+      "calctableCalendar",
+      "calctable"
+    ],
+    "MaxRecentItems": 20
+  },
+  "ExplorerSettings": {
+    "ShowInfoColumns": false,
+    "ShowHiddenObjects": true,
+    "ShowMeasures": true,
+    "ShowHierarchies": true,
+    "ShowColumns": true,
+    "ShowPartitions": true,
+    "ShowDisplayFolders": true,
+    "ShowEntireBranchWhenFiltering": false,
+    "AlwaysShowDeleteWarning": false,
+    "InfoColumns": {},
+    "LockColumnWidths": true,
+    "ShowTableGroups": true,
+    "HighlightRelationships": true,
+    "CurrencyFormatSettings": {
+      "CurrencyFormat": "English (United States)",
+      "UseCustomCurrency": false,
+      "CustomCurrencySymbol": "",
+      "CustomCurrencyPosition": "Before number",
+      "CustomCurrencySpace": false
+    }
+  },
+  "PerspectiveEditorSettings": {
+    "ShowHiddenObjects": true
+  },
+  "MetadataTranslationEditorSettings": {
+    "ShowHiddenObjects": true
+  }
+}
