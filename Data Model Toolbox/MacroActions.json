@@ -655,6 +655,14 @@
       "Execute": "// Make Sure to SAVE THE MODEL after you have added the four info tables\nvar rel = Model.AddRelationship();\n// Assign the \"many\" side (from _Columns[Table])\nrel.FromColumn = Model.Tables[\"_Columns\"].Columns[\"Table\"];\n// Assign the \"one\" side (to _Tables[Table Name])\nrel.ToColumn = Model.Tables[\"_Tables\"].Columns[\"Name\"];\n// Set the relationship as active\nrel.IsActive = true;\n// Name the relationship\nrel.Name = \"Relationship between _Columns and _Tables\";\n\nModel.Tables[\"_Tables\"].IsHidden = true;\nModel.Tables[\"_Columns\"].IsHidden = true;\nModel.Tables[\"_Relationships\"].IsHidden = true;\nModel.Tables[\"_Measure\"].IsHidden = true;",
       "Tooltip": "",
       "ValidContexts": "Model"
-    }
+    },
+	{
+	 "Id": 89,
+	 "Name": "9. Nordgaards Repo\\Setting one shared expresssion with description",
+	 "Enabled": "true",
+	 "Execute": "/*\nForfatter: Andreas Nordgaard aols0228 og ChatGPT\nLink to source: \nBeskrivelse: Makro, der opdaterer eksisterende parametre to sandbox-miljøet\n 1. It creates a dictionary with key/value pairs of typestring/string with the M parameters you wish to update\n 2. If the M parameters do not preexist the script fails\n 3. If they exist it fetches the M parameters with the same name as in the dictionary\n 3. It then insert the new parameters value for sandbox environment\n\nChange Log: (udShift denne med dine noter)\n---------------------------------------------------------------\nVer. | Dato DD-MM-YYYY | Forfatter | Beskrivelse\n1.0 19-06-2024 aols0228 Frigivelse af makro\n1.1 19-09-2024 aols0228 Brug af custom class, ExpressionInfo, for at toføje beskrivelse\n*/\n\npublic class ExpressionInfo\n{\n public string Key { get; set; }\n public string Value { get; set; }\n public string Description { get; set; }\n}\n\nvar Expression = new ExpressionInfo // Add the strings directly below\n{ \n Key = \"Cluster\", \n Value = \"/sql/\", \n Description = \"Development (standard)\" \n};\n\nModel.Expressions[Expression.Key].Expression = \n $@\"// {Expression.Description} {Expression.Key.ToLower()}\n\"\"\" + Expression.Value + @\"\"\"\nmeta [\n IsParameterQuery = true,\n IsParameterQueryRequired = true,\n Type = type text\n]\";",
+	 "Tooltip": "",
+	 "ValidContexts": "Model"
+	 }
   ]
 }
