@@ -146,7 +146,7 @@
     },
     {
       "Id": 19,
-      "Name": "3. Calc Table\\2. Create Empty Measure Table",
+      "Name": "3. Calc Table\\2. Create Empty Measure Table (TE3)",
       "Enabled": "true",
       "Execute": "// ATTENTION FOR TE2 Users: Script needs modification AND needs to be run in 2 steps\n\n// First Step: Add Table\nvar table = Model.AddCalculatedTable(\"Measure\", \"{0}\"); \n\n// Second Step: JUST FOR TE2 Save Data Model Changes\n\n// Third Step: Hides the column, uncomment the next line and execute it separately\n//var table = Model.Tables[\"Measure\"]; //uncomment this line for TE2\ntable.Columns[0].IsHidden = true;",
       "Tooltip": "",
@@ -656,13 +656,45 @@
       "Tooltip": "",
       "ValidContexts": "Model"
     },
-	{
-	 "Id": 89,
-	 "Name": "9. Nordgaards Repo\\Setting one shared expresssion with description",
-	 "Enabled": "true",
-	 "Execute": "/*\nForfatter: Andreas Nordgaard aols0228 og ChatGPT\nLink to source: \nBeskrivelse: Makro, der opdaterer eksisterende parametre to sandbox-miljøet\n 1. It creates a dictionary with key/value pairs of typestring/string with the M parameters you wish to update\n 2. If the M parameters do not preexist the script fails\n 3. If they exist it fetches the M parameters with the same name as in the dictionary\n 3. It then insert the new parameters value for sandbox environment\n\nChange Log: (udShift denne med dine noter)\n---------------------------------------------------------------\nVer. | Dato DD-MM-YYYY | Forfatter | Beskrivelse\n1.0 19-06-2024 aols0228 Frigivelse af makro\n1.1 19-09-2024 aols0228 Brug af custom class, ExpressionInfo, for at toføje beskrivelse\n*/\n\npublic class ExpressionInfo\n{\n public string Key { get; set; }\n public string Value { get; set; }\n public string Description { get; set; }\n}\n\nvar Expression = new ExpressionInfo // Add the strings directly below\n{ \n Key = \"Cluster\", \n Value = \"/sql/\", \n Description = \"Development (standard)\" \n};\n\nModel.Expressions[Expression.Key].Expression = \n $@\"// {Expression.Description} {Expression.Key.ToLower()}\n\"\"\" + Expression.Value + @\"\"\"\nmeta [\n IsParameterQuery = true,\n IsParameterQueryRequired = true,\n Type = type text\n]\";",
-	 "Tooltip": "",
-	 "ValidContexts": "Model"
-	 }
+    {
+      "Id": 89,
+      "Name": "9. Nordgaards Repo\\Setting one shared expresssion with description",
+      "Enabled": "true",
+      "Execute": "/*\nForfatter: Andreas Nordgaard aols0228 og ChatGPT\nLink to source: \nBeskrivelse: Makro, der opdaterer eksisterende parametre to sandbox-miljøet\n 1. It creates a dictionary with key/value pairs of typestring/string with the M parameters you wish to update\n 2. If the M parameters do not preexist the script fails\n 3. If they exist it fetches the M parameters with the same name as in the dictionary\n 3. It then insert the new parameters value for sandbox environment\n\nChange Log: (udShift denne med dine noter)\n---------------------------------------------------------------\nVer. | Dato DD-MM-YYYY | Forfatter | Beskrivelse\n1.0 19-06-2024 aols0228 Frigivelse af makro\n1.1 19-09-2024 aols0228 Brug af custom class, ExpressionInfo, for at toføje beskrivelse\n*/\n\npublic class ExpressionInfo\n{\n public string Key { get; set; }\n public string Value { get; set; }\n public string Description { get; set; }\n}\n\nvar Expression = new ExpressionInfo // Add the strings directly below\n{ \n Key = \"Cluster\", \n Value = \"/sql/\", \n Description = \"Development (standard)\" \n};\n\nModel.Expressions[Expression.Key].Expression = \n $@\"// {Expression.Description} {Expression.Key.ToLower()}\n\"\"\" + Expression.Value + @\"\"\"\nmeta [\n IsParameterQuery = true,\n IsParameterQueryRequired = true,\n Type = type text\n]\";",
+      "Tooltip": "",
+      "ValidContexts": "Model"
+    },
+    {
+      "Id": 90,
+      "Name": "3. Calc Table\\2. Create Empty Measure Table (TE2)\\1. Create - 1 Measure Table",
+      "Enabled": "true",
+      "Execute": "// ATTENTION FOR TE2 Users: Script needs modification AND needs to be run in 2 steps\n\n// First Step: Add Tables\nvar table = Model.AddCalculatedTable(\"Measure\", \"{0}\"); \n\n// Second Step: JUST FOR TE2 Save Data Model Changes",
+      "Tooltip": "",
+      "ValidContexts": "Model"
+    },
+    {
+      "Id": 91,
+      "Name": "3. Calc Table\\2. Create Empty Measure Table (TE2)\\2. Hide Column - 1 Measure Table",
+      "Enabled": "true",
+      "Execute": "// Third Step: After saving the created table this hides the \"value\" column\nvar table = Model.Tables[\"Measure\"];\ntable.Columns[0].IsHidden = true;\n",
+      "Tooltip": "",
+      "ValidContexts": "Model"
+    },
+    {
+      "Id": 92,
+      "Name": "3. Calc Table\\2. Create Empty Measure Table (TE2)\\1. Create - 3 Measure Tables with Icon",
+      "Enabled": "true",
+      "Execute": "// ATTENTION FOR TE2 Users: Hiding of value column is not included, therefore 3 steps as 2 scripts\n\n// First Step: Add Tables\nvar table = Model.AddCalculatedTable(\"\\U0001F3AFMeasures | 1.\\U0001F4C8KPIs\", \"{0}\"); \nvar table1 = Model.AddCalculatedTable(\"\\U0001F3AFMeasures | 2. \\U00000023\\U000020E3 Variables\", \"{0}\");\nvar table2 = Model.AddCalculatedTable(\"\\U0001F3AFMeasures | 3.\\U0001F4CB Titles and Labels\", \"{0}\");\n\n// Second Step: JUST FOR TE2 Save Data Model Changes\n\n// Third Step: Hide the columns \"value\"",
+      "Tooltip": "",
+      "ValidContexts": "Model"
+    },
+    {
+      "Id": 93,
+      "Name": "3. Calc Table\\2. Create Empty Measure Table (TE2)\\2. Hide Column - 3 Measure Table with Icon",
+      "Enabled": "true",
+      "Execute": "// Third Step: After saving the created table this hides the \"value\" column\nvar table = Model.Tables[\"\\U0001F3AFMeasures | 1.\\U0001F4C8KPIs\"];\ntable.Columns[0].IsHidden = true;\n\nvar table1 = Model.Tables[\"\\U0001F3AFMeasures | 2. \\U00000023\\U000020E3 Variables\"];\ntable1.Columns[0].IsHidden = true;\n\nvar table2 = Model.Tables[\"\\U0001F3AFMeasures | 3.\\U0001F4CB Titles and Labels\"];\ntable2.Columns[0].IsHidden = true;",
+      "Tooltip": "",
+      "ValidContexts": "Model"
+    }
   ]
 }
