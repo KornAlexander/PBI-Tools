@@ -1,0 +1,1 @@
+Export-FabricItems -workspaceId "workspaceID" -path "localpath"
