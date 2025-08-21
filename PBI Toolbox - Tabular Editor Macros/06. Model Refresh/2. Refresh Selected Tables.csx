@@ -1,4 +1,4 @@
-// Tabular Editor Script: 9. Model Refresh\2. Refresh Selected Tables
+// Tabular Editor Script: 6. Model Refresh\2. Refresh Selected Tables
 // Valid Contexts: Model
 // Tooltip: 
 // Generated: 2025-08-21T16:54:13.142Z

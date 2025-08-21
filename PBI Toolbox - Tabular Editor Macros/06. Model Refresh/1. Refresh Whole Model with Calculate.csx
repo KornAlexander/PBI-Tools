@@ -1,4 +1,4 @@
-// Tabular Editor Script: 9. Model Refresh\1. Refresh Whole Model with Calculate
+// Tabular Editor Script: 6. Model Refresh\1. Refresh Whole Model with Calculate
 // Valid Contexts: Model
 // Tooltip: 
 // Generated: 2025-08-21T16:54:13.142Z
