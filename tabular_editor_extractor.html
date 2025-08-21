@@ -233,11 +233,10 @@
         }
 
         function sanitizeFileName(name) {
-            // Replace backslashes and other invalid characters with underscores
-            return name.replace(/[\\\/:"*?<>|]/g, '_')
-                      .replace(/\s+/g, '_')
-                      .replace(/_+/g, '_')
-                      .replace(/^_|_$/g, '');
+            // Replace backslashes and other invalid characters, but keep spaces
+            return name.replace(/[\\\/:"*?<>|]/g, ' ')
+                      .replace(/\s+/g, ' ')
+                      .trim();
         }
 
         function parseNameParts(name) {
