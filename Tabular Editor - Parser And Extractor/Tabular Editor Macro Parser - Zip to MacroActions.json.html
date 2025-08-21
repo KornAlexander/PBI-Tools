@@ -399,12 +399,8 @@
                     scriptName = filePathToScriptName(fileName);
                 }
 
-                // Clean up the content (escape quotes and newlines for JSON)
-                const cleanContent = actualContent
-                    .replace(/"/g, '\\"')
-                    .replace(/\r\n/g, '\\n')
-                    .replace(/\n/g, '\\n')
-                    .replace(/\r/g, '\\r');
+                // Keep the content as-is, JSON.stringify will handle proper escaping
+                const cleanContent = actualContent;
 
                 return {
                     Name: scriptName,
