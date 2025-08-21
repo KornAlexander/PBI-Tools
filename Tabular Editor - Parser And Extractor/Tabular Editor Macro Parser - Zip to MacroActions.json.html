@@ -425,8 +425,8 @@
             // Remove .csx extension
             let name = filePath.replace(/\.csx$/i, '');
             
-            // Convert forward slashes to double backslashes for Tabular Editor format
-            name = name.replace(/\//g, '\\\\');
+            // Convert forward slashes to single backslashes for Tabular Editor format
+            name = name.replace(/\//g, '\\');
             
             return name;
         }
