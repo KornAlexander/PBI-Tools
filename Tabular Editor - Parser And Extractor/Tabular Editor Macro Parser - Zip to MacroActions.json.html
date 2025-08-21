@@ -1,0 +1,528 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ZIP to MacroActions.json Converter</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        
+        h1 {
+            color: #2c3e50;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        
+        .section {
+            margin-bottom: 25px;
+        }
+        
+        .section h2 {
+            color: #34495e;
+            border-bottom: 2px solid #e74c3c;
+            padding-bottom: 5px;
+        }
+        
+        .file-input-container {
+            border: 2px dashed #bdc3c7;
+            border-radius: 10px;
+            padding: 40px;
+            text-align: center;
+            background-color: #ecf0f1;
+            transition: border-color 0.3s, background-color 0.3s;
+        }
+        
+        .file-input-container:hover {
+            border-color: #e74c3c;
+            background-color: #f8f9fa;
+        }
+        
+        .file-input-container.dragover {
+            border-color: #e74c3c;
+            background-color: #ffe6e6;
+        }
+        
+        #fileInput {
+            display: none;
+        }
+        
+        .file-input-label {
+            display: inline-block;
+            padding: 12px 25px;
+            background-color: #e74c3c;
+            color: white;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.3s;
+        }
+        
+        .file-input-label:hover {
+            background-color: #c0392b;
+        }
+        
+        .file-info {
+            margin-top: 15px;
+            padding: 10px;
+            background-color: #d5e8ff;
+            border: 1px solid #3498db;
+            border-radius: 5px;
+            display: none;
+        }
+        
+        textarea {
+            width: 100%;
+            height: 300px;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            resize: vertical;
+            box-sizing: border-box;
+        }
+        
+        button {
+            background-color: #e74c3c;
+            color: white;
+            padding: 12px 25px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 10px 5px;
+            transition: background-color 0.3s;
+        }
+        
+        button:hover {
+            background-color: #c0392b;
+        }
+        
+        button:disabled {
+            background-color: #bdc3c7;
+            cursor: not-allowed;
+        }
+        
+        .secondary-btn {
+            background-color: #95a5a6;
+        }
+        
+        .secondary-btn:hover {
+            background-color: #7f8c8d;
+        }
+        
+        .progress {
+            margin: 15px 0;
+            padding: 10px;
+            background-color: #ecf0f1;
+            border-left: 4px solid #e74c3c;
+            border-radius: 3px;
+            display: none;
+        }
+        
+        .status {
+            margin: 15px 0;
+            padding: 10px;
+            border-radius: 5px;
+            display: none;
+        }
+        
+        .status.success {
+            background-color: #d5ffd5;
+            border: 1px solid #27ae60;
+            color: #27ae60;
+            display: block;
+        }
+        
+        .status.error {
+            background-color: #ffd5d5;
+            border: 1px solid #e74c3c;
+            color: #e74c3c;
+            display: block;
+        }
+        
+        .status.info {
+            background-color: #d5e8ff;
+            border: 1px solid #3498db;
+            color: #3498db;
+            display: block;
+        }
+        
+        .script-count {
+            font-weight: bold;
+            color: #27ae60;
+            font-size: 18px;
+        }
+        
+        .file-list {
+            background-color: #f8f9fa;
+            padding: 15px;
+            border-radius: 5px;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            max-height: 300px;
+            overflow-y: auto;
+            margin-top: 10px;
+            white-space: pre-line;
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .json-preview {
+            margin-top: 20px;
+        }
+
+        .preview-controls {
+            margin-bottom: 10px;
+        }
+
+        .copy-btn {
+            background-color: #3498db;
+        }
+
+        .copy-btn:hover {
+            background-color: #2980b9;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>ZIP to MacroActions.json Converter</h1>
+        
+        <div class="section">
+            <h2>Step 1: Select ZIP File</h2>
+            <p>Choose a ZIP file containing Tabular Editor scripts (.csx files):</p>
+            
+            <div class="file-input-container" id="fileDropZone">
+                <label for="fileInput" class="file-input-label">
+                    Choose ZIP File
+                </label>
+                <input type="file" id="fileInput" accept=".zip" />
+                <p>or drag and drop a ZIP file here</p>
+                
+                <div id="fileInfo" class="file-info">
+                    <strong>File loaded:</strong> <span id="fileName"></span><br>
+                    <strong>Size:</strong> <span id="fileSize"></span>
+                </div>
+            </div>
+        </div>
+        
+        <div id="processResults" class="section" style="display: none;">
+            <h2>Step 2: Review Extracted Scripts</h2>
+            <div id="scriptCount"></div>
+            <div id="fileList" class="file-list"></div>
+            
+            <div class="action-buttons">
+                <button onclick="generateJson()" id="generateBtn" disabled>Generate MacroActions.json</button>
+                <button onclick="clearAll()" class="secondary-btn">Clear All</button>
+            </div>
+        </div>
+        
+        <div id="jsonResults" class="section json-preview" style="display: none;">
+            <h2>Step 3: Generated MacroActions.json</h2>
+            <div class="preview-controls">
+                <button onclick="copyToClipboard()" class="copy-btn">Copy to Clipboard</button>
+                <button onclick="downloadJson()" class="secondary-btn">Download JSON File</button>
+            </div>
+            <textarea id="jsonOutput" readonly placeholder="Generated JSON will appear here..."></textarea>
+        </div>
+        
+        <div id="progress" class="progress">
+            Processing ZIP file...
+        </div>
+        
+        <div id="status"></div>
+    </div>
+
+    <script>
+        let extractedScripts = [];
+        let generatedJson = '';
+
+        // File input and drag/drop handling
+        const fileInput = document.getElementById('fileInput');
+        const fileDropZone = document.getElementById('fileDropZone');
+        const fileInfo = document.getElementById('fileInfo');
+
+        fileInput.addEventListener('change', handleFileSelect);
+
+        // Drag and drop functionality
+        fileDropZone.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            fileDropZone.classList.add('dragover');
+        });
+
+        fileDropZone.addEventListener('dragleave', () => {
+            fileDropZone.classList.remove('dragover');
+        });
+
+        fileDropZone.addEventListener('drop', (e) => {
+            e.preventDefault();
+            fileDropZone.classList.remove('dragover');
+            
+            const files = e.dataTransfer.files;
+            if (files.length > 0 && files[0].name.toLowerCase().endsWith('.zip')) {
+                handleFileSelect({ target: { files: files } });
+            } else {
+                showStatus('Please drop a valid ZIP file.', 'error');
+            }
+        });
+
+        function handleFileSelect(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            if (!file.name.toLowerCase().endsWith('.zip')) {
+                showStatus('Please select a ZIP file.', 'error');
+                return;
+            }
+
+            // Update file info
+            document.getElementById('fileName').textContent = file.name;
+            document.getElementById('fileSize').textContent = formatFileSize(file.size);
+            fileInfo.style.display = 'block';
+
+            // Process the ZIP file
+            processZipFile(file);
+        }
+
+        function formatFileSize(bytes) {
+            if (bytes === 0) return '0 Bytes';
+            const k = 1024;
+            const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+        }
+
+        function showStatus(message, type) {
+            const statusDiv = document.getElementById('status');
+            statusDiv.textContent = message;
+            statusDiv.className = 'status ' + type;
+        }
+
+        async function processZipFile(file) {
+            try {
+                document.getElementById('progress').style.display = 'block';
+                extractedScripts = [];
+
+                const zip = new JSZip();
+                const zipContent = await zip.loadAsync(file);
+
+                let scriptCount = 0;
+                let fileListText = '';
+
+                // Process each file in the ZIP
+                for (const [fileName, zipEntry] of Object.entries(zipContent.files)) {
+                    if (!zipEntry.dir && fileName.toLowerCase().endsWith('.csx')) {
+                        const content = await zipEntry.async('text');
+                        const script = parseScriptFile(fileName, content);
+                        
+                        if (script) {
+                            extractedScripts.push(script);
+                            scriptCount++;
+                            fileListText += `📄 ${fileName}\n`;
+                        }
+                    } else if (zipEntry.dir) {
+                        fileListText += `📁 ${fileName}\n`;
+                    }
+                }
+
+                document.getElementById('progress').style.display = 'none';
+
+                if (scriptCount === 0) {
+                    showStatus('No .csx script files found in the ZIP file.', 'error');
+                    return;
+                }
+
+                // Update UI
+                document.getElementById('scriptCount').innerHTML = 
+                    `<span class="script-count">${scriptCount}</span> script files found and ready for conversion.`;
+                
+                document.getElementById('fileList').textContent = fileListText;
+                document.getElementById('processResults').style.display = 'block';
+                document.getElementById('generateBtn').disabled = false;
+
+                showStatus(`Successfully processed ${scriptCount} script files!`, 'success');
+
+            } catch (error) {
+                document.getElementById('progress').style.display = 'none';
+                showStatus('Error processing ZIP file: ' + error.message, 'error');
+                console.error('ZIP processing error:', error);
+            }
+        }
+
+        function parseScriptFile(fileName, content) {
+            try {
+                // Extract metadata from header comments
+                const lines = content.split('\n');
+                let scriptName = '';
+                let tooltip = '';
+                let validContexts = 'Model';
+                let actualContent = content;
+
+                // Parse header comments if they exist
+                for (let i = 0; i < Math.min(10, lines.length); i++) {
+                    const line = lines[i].trim();
+                    if (line.startsWith('// Tabular Editor Script:')) {
+                        scriptName = line.replace('// Tabular Editor Script:', '').trim();
+                    } else if (line.startsWith('// Valid Contexts:')) {
+                        validContexts = line.replace('// Valid Contexts:', '').trim();
+                    } else if (line.startsWith('// Tooltip:')) {
+                        tooltip = line.replace('// Tooltip:', '').trim();
+                    } else if (line.startsWith('// Generated:')) {
+                        // Find where the actual script content starts (after metadata comments)
+                        const contentStartIndex = i + 2; // Skip the generated line and empty line
+                        actualContent = lines.slice(contentStartIndex).join('\n');
+                        break;
+                    }
+                }
+
+                // If no script name found in header, derive from file path
+                if (!scriptName) {
+                    scriptName = filePathToScriptName(fileName);
+                }
+
+                // Clean up the content (escape quotes and newlines for JSON)
+                const cleanContent = actualContent
+                    .replace(/"/g, '\\"')
+                    .replace(/\r\n/g, '\\n')
+                    .replace(/\n/g, '\\n')
+                    .replace(/\r/g, '\\r');
+
+                return {
+                    Name: scriptName,
+                    Enabled: "true",
+                    Execute: cleanContent,
+                    Tooltip: tooltip,
+                    ValidContexts: validContexts || 'Model'
+                };
+
+            } catch (error) {
+                console.error(`Error parsing script file ${fileName}:`, error);
+                return null;
+            }
+        }
+
+        function filePathToScriptName(filePath) {
+            // Convert file path back to script name format
+            // Remove .csx extension
+            let name = filePath.replace(/\.csx$/i, '');
+            
+            // Convert forward slashes to double backslashes for Tabular Editor format
+            name = name.replace(/\//g, '\\\\');
+            
+            return name;
+        }
+
+        function generateJson() {
+            if (extractedScripts.length === 0) {
+                showStatus('No scripts to convert. Please select a ZIP file first.', 'error');
+                return;
+            }
+
+            try {
+                document.getElementById('progress').style.display = 'block';
+
+                const macroActions = {
+                    Actions: extractedScripts
+                };
+
+                generatedJson = JSON.stringify(macroActions, null, 2);
+
+                document.getElementById('jsonOutput').value = generatedJson;
+                document.getElementById('jsonResults').style.display = 'block';
+                document.getElementById('progress').style.display = 'none';
+
+                showStatus(`MacroActions.json generated successfully with ${extractedScripts.length} actions!`, 'success');
+
+                // Scroll to results
+                document.getElementById('jsonResults').scrollIntoView({ behavior: 'smooth' });
+
+            } catch (error) {
+                document.getElementById('progress').style.display = 'none';
+                showStatus('Error generating JSON: ' + error.message, 'error');
+                console.error('JSON generation error:', error);
+            }
+        }
+
+        function copyToClipboard() {
+            const jsonOutput = document.getElementById('jsonOutput');
+            jsonOutput.select();
+            jsonOutput.setSelectionRange(0, 99999); // For mobile devices
+
+            try {
+                navigator.clipboard.writeText(jsonOutput.value).then(() => {
+                    showStatus('JSON copied to clipboard!', 'success');
+                }).catch(() => {
+                    // Fallback for older browsers
+                    document.execCommand('copy');
+                    showStatus('JSON copied to clipboard!', 'success');
+                });
+            } catch (error) {
+                showStatus('Failed to copy to clipboard.', 'error');
+            }
+        }
+
+        function downloadJson() {
+            if (!generatedJson) {
+                showStatus('No JSON to download. Please generate JSON first.', 'error');
+                return;
+            }
+
+            try {
+                const blob = new Blob([generatedJson], { type: 'application/json' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `MacroActions_${new Date().toISOString().slice(0, 10)}.json`;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+
+                showStatus('JSON file downloaded successfully!', 'success');
+            } catch (error) {
+                showStatus('Error downloading file: ' + error.message, 'error');
+            }
+        }
+
+        function clearAll() {
+            // Reset file input
+            fileInput.value = '';
+            fileInfo.style.display = 'none';
+            
+            // Clear data
+            extractedScripts = [];
+            generatedJson = '';
+            
+            // Hide sections
+            document.getElementById('processResults').style.display = 'none';
+            document.getElementById('jsonResults').style.display = 'none';
+            document.getElementById('status').style.display = 'none';
+            
+            // Clear outputs
+            document.getElementById('jsonOutput').value = '';
+            
+            // Reset buttons
+            document.getElementById('generateBtn').disabled = true;
+        }
+    </script>
+</body>
+</html>

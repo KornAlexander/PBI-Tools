@@ -1,0 +1,460 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tabular Editor Scripts Extractor</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        
+        h1 {
+            color: #2c3e50;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        
+        .section {
+            margin-bottom: 25px;
+        }
+        
+        .section h2 {
+            color: #34495e;
+            border-bottom: 2px solid #3498db;
+            padding-bottom: 5px;
+        }
+        
+        textarea {
+            width: 100%;
+            height: 200px;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            resize: vertical;
+            box-sizing: border-box;
+        }
+        
+        button {
+            background-color: #3498db;
+            color: white;
+            padding: 12px 25px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 10px 5px;
+            transition: background-color 0.3s;
+        }
+        
+        button:hover {
+            background-color: #2980b9;
+        }
+        
+        button:disabled {
+            background-color: #bdc3c7;
+            cursor: not-allowed;
+        }
+        
+        .progress {
+            margin: 15px 0;
+            padding: 10px;
+            background-color: #ecf0f1;
+            border-left: 4px solid #3498db;
+            border-radius: 3px;
+            display: none;
+        }
+        
+        .status {
+            margin: 15px 0;
+            padding: 10px;
+            border-radius: 5px;
+            display: none;
+        }
+        
+        .status.success {
+            background-color: #d5ffd5;
+            border: 1px solid #27ae60;
+            color: #27ae60;
+            display: block;
+        }
+        
+        .status.error {
+            background-color: #ffd5d5;
+            border: 1px solid #e74c3c;
+            color: #e74c3c;
+            display: block;
+        }
+        
+        .status.info {
+            background-color: #d5e8ff;
+            border: 1px solid #3498db;
+            color: #3498db;
+            display: block;
+        }
+        
+        .script-count {
+            font-weight: bold;
+            color: #27ae60;
+            font-size: 18px;
+        }
+        
+        .folder-structure {
+            background-color: #f8f9fa;
+            padding: 15px;
+            border-radius: 5px;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            max-height: 300px;
+            overflow-y: auto;
+            margin-top: 10px;
+            white-space: pre-line;
+        }
+
+        .script-preview {
+            margin-top: 20px;
+        }
+
+        .script-item {
+            margin-bottom: 15px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            overflow: hidden;
+        }
+
+        .script-header {
+            background-color: #f8f9fa;
+            padding: 10px;
+            font-weight: bold;
+            border-bottom: 1px solid #ddd;
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .script-header:hover {
+            background-color: #e9ecef;
+        }
+
+        .script-content {
+            display: none;
+            padding: 15px;
+            background-color: #fff;
+            font-family: 'Courier New', monospace;
+            font-size: 11px;
+            max-height: 200px;
+            overflow-y: auto;
+            white-space: pre-wrap;
+        }
+
+        .script-content.expanded {
+            display: block;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Tabular Editor Scripts Extractor & Organizer</h1>
+        
+        <div class="section">
+            <h2>Step 1: Input JSON Data</h2>
+            <p>Paste the MacroActions.json content below:</p>
+            <textarea id="jsonInput" placeholder="Paste your MacroActions.json content here..."></textarea>
+            <button onclick="parseScripts()">Parse Scripts</button>
+            <button onclick="clearInput()">Clear</button>
+        </div>
+        
+        <div id="parseResults" class="section" style="display: none;">
+            <h2>Step 2: Review Parsed Scripts</h2>
+            <div id="scriptCount"></div>
+            <div id="folderStructure"></div>
+            <div id="scriptPreview" class="script-preview"></div>
+            <button onclick="generateZip()" id="generateBtn" disabled>Generate ZIP File</button>
+        </div>
+        
+        <div id="progress" class="progress">
+            Processing scripts...
+        </div>
+        
+        <div id="status"></div>
+    </div>
+
+    <script>
+        let parsedScripts = [];
+
+        // Auto-populate the JSON input with sample data
+        window.addEventListener('load', function() {
+            const sampleJsonData = `{
+  "Actions": [
+    {
+      "Name": "1. Measure Create\\\\1. Add From Column\\\\1. All columns ending with key or ID: Set Summarize By to None",
+      "Enabled": "true",
+      "Execute": "// Change SummarizeBy to None for All ID and Key columns ***********************************************************\\n\\n    foreach (var table in Model.Tables)\\n    {\\n        foreach (var column in table.Columns)\\n        {\\n            if (column.Name.EndsWith(\\"Key\\") || column.Name.EndsWith(\\"ID\\"))\\n            {\\n                column.SummarizeBy = AggregateFunction.None;\\n            }\\n        }\\n    }\\n",
+      "Tooltip": "",
+      "ValidContexts": "Model"
+    },
+    {
+      "Name": "9. Model Refresh\\\\2. Refresh Partitions",
+      "Enabled": "true",
+      "Execute": "#r \\"Microsoft.AnalysisServices.Core.dll\\"\\r\\nusing ToM = Microsoft.AnalysisServices.Tabular;\\r\\n\\r\\nvar refreshType = ToM.RefreshType.DataOnly;\\r\\nToM.SaveOptions so = new ToM.SaveOptions();\\r\\n//so.MaxParallelism = 10;\\r\\n\\r\\nforeach (var p in Selected.Partitions)\\r\\n{\\r\\n    string tableName = p.Table.Name;\\r\\n    string partitionName = p.Name;\\r\\n    Model.Database.TOMDatabase.Model.Tables[tableName].Partitions[partitionName].RequestRefresh(refreshType); \\r\\n}\\r\\n\\r\\nModel.Database.TOMDatabase.Model.SaveChanges(so);",
+      "Tooltip": "",
+      "ValidContexts": "Model"
+    }
+  ]
+}`;
+            
+            document.getElementById('jsonInput').value = sampleJsonData;
+        });
+
+        function clearInput() {
+            document.getElementById('jsonInput').value = '';
+            document.getElementById('parseResults').style.display = 'none';
+            document.getElementById('status').style.display = 'none';
+            parsedScripts = [];
+        }
+
+        function showStatus(message, type) {
+            const statusDiv = document.getElementById('status');
+            statusDiv.textContent = message;
+            statusDiv.className = 'status ' + type;
+        }
+
+        function sanitizeFileName(name) {
+            // Replace backslashes and other invalid characters, but keep spaces
+            return name.replace(/[\\\/:"*?<>|]/g, ' ')
+                      .replace(/\s+/g, ' ')
+                      .trim();
+        }
+
+        function parseNameParts(name) {
+            // Split by double backslashes first, then single backslashes
+            const parts = name.split('\\\\').join('\\').split('\\');
+            return parts.map(part => part.trim()).filter(part => part.length > 0);
+        }
+
+        function createFolderStructure(scripts) {
+            const structure = {};
+            
+            scripts.forEach(script => {
+                const parts = parseNameParts(script.name);
+                let current = structure;
+                
+                // Navigate through the folder structure
+                for (let i = 0; i < parts.length - 1; i++) {
+                    const folder = parts[i];
+                    if (!current[folder]) {
+                        current[folder] = {};
+                    }
+                    current = current[folder];
+                }
+                
+                // Add the script file
+                const fileName = parts[parts.length - 1];
+                const sanitizedFileName = sanitizeFileName(fileName) + '.csx';
+                current[sanitizedFileName] = script;
+            });
+            
+            return structure;
+        }
+
+        function displayFolderStructure(structure, indent = 0) {
+            let result = '';
+            const indentStr = '  '.repeat(indent);
+            
+            Object.keys(structure).sort().forEach(key => {
+                if (typeof structure[key] === 'object' && structure[key].name === undefined) {
+                    // It's a folder
+                    result += `${indentStr}📁 ${key}/\n`;
+                    result += displayFolderStructure(structure[key], indent + 1);
+                } else {
+                    // It's a script file
+                    result += `${indentStr}📄 ${key}\n`;
+                }
+            });
+            
+            return result;
+        }
+
+        function displayScriptPreview(scripts) {
+            const previewDiv = document.getElementById('scriptPreview');
+            previewDiv.innerHTML = '';
+            
+            if (scripts.length === 0) return;
+            
+            const title = document.createElement('h3');
+            title.textContent = 'Script Preview (Click to expand)';
+            previewDiv.appendChild(title);
+            
+            scripts.forEach((script, index) => {
+                const scriptDiv = document.createElement('div');
+                scriptDiv.className = 'script-item';
+                
+                const header = document.createElement('div');
+                header.className = 'script-header';
+                header.textContent = `${script.fileName} (${script.execute.length} characters)`;
+                header.onclick = () => toggleScriptContent(index);
+                
+                const content = document.createElement('div');
+                content.className = 'script-content';
+                content.id = `script-content-${index}`;
+                content.textContent = script.execute;
+                
+                scriptDiv.appendChild(header);
+                scriptDiv.appendChild(content);
+                previewDiv.appendChild(scriptDiv);
+            });
+        }
+
+        function toggleScriptContent(index) {
+            const content = document.getElementById(`script-content-${index}`);
+            content.classList.toggle('expanded');
+        }
+
+        function parseScripts() {
+            const jsonInput = document.getElementById('jsonInput').value.trim();
+            
+            if (!jsonInput) {
+                showStatus('Please enter JSON data first.', 'error');
+                return;
+            }
+            
+            try {
+                document.getElementById('progress').style.display = 'block';
+                
+                const data = JSON.parse(jsonInput);
+                
+                if (!data.Actions || !Array.isArray(data.Actions)) {
+                    throw new Error('Invalid JSON structure. Expected "Actions" array.');
+                }
+                
+                parsedScripts = data.Actions
+                    .filter(action => action.Enabled === "true" && action.Execute)
+                    .map(action => {
+                        const nameParts = parseNameParts(action.Name);
+                        const fileName = sanitizeFileName(nameParts[nameParts.length - 1]);
+                        
+                        return {
+                            name: action.Name,
+                            fileName: fileName + '.csx',
+                            execute: action.Execute.replace(/\\n/g, '\n').replace(/\\r/g, '\r').replace(/\\"/g, '"'),
+                            tooltip: action.Tooltip || '',
+                            validContexts: action.ValidContexts || '',
+                            folderPath: nameParts.slice(0, -1).map(part => sanitizeFileName(part))
+                        };
+                    });
+                
+                document.getElementById('progress').style.display = 'none';
+                
+                if (parsedScripts.length === 0) {
+                    showStatus('No enabled scripts found in the JSON data.', 'error');
+                    return;
+                }
+                
+                // Update UI
+                document.getElementById('scriptCount').innerHTML = 
+                    `<span class="script-count">${parsedScripts.length}</span> scripts found and ready for extraction.`;
+                
+                const structure = createFolderStructure(parsedScripts);
+                document.getElementById('folderStructure').textContent = displayFolderStructure(structure);
+                
+                displayScriptPreview(parsedScripts);
+                
+                document.getElementById('parseResults').style.display = 'block';
+                document.getElementById('generateBtn').disabled = false;
+                
+                showStatus('Scripts parsed successfully!', 'success');
+                
+            } catch (error) {
+                document.getElementById('progress').style.display = 'none';
+                showStatus('Error parsing JSON: ' + error.message, 'error');
+                console.error('Parse error:', error);
+            }
+        }
+
+        async function generateZip() {
+            if (parsedScripts.length === 0) {
+                showStatus('No scripts to generate. Please parse JSON data first.', 'error');
+                return;
+            }
+            
+            try {
+                document.getElementById('progress').style.display = 'block';
+                document.getElementById('generateBtn').disabled = true;
+                
+                const zip = new JSZip();
+                
+                // Group scripts by folder structure
+                const folderStructure = {};
+                
+                parsedScripts.forEach(script => {
+                    const folderPath = script.folderPath.join('/');
+                    if (!folderStructure[folderPath]) {
+                        folderStructure[folderPath] = [];
+                    }
+                    folderStructure[folderPath].push(script);
+                });
+                
+                // Add scripts to ZIP with folder structure
+                Object.keys(folderStructure).forEach(folderPath => {
+                    const scripts = folderStructure[folderPath];
+                    
+                    scripts.forEach(script => {
+                        const fullPath = folderPath ? `${folderPath}/${script.fileName}` : script.fileName;
+                        
+                        // Create script content with header comment
+                        const scriptContent = `// Tabular Editor Script: ${script.name}
+// Valid Contexts: ${script.validContexts}
+// Tooltip: ${script.tooltip}
+// Generated: ${new Date().toISOString()}
+
+${script.execute}`;
+                        
+                        zip.file(fullPath, scriptContent);
+                    });
+                });
+                
+                // Generate the ZIP file
+                const zipBlob = await zip.generateAsync({
+                    type: 'blob',
+                    compression: 'DEFLATE',
+                    compressionOptions: { level: 6 }
+                });
+                
+                // Create download link
+                const url = URL.createObjectURL(zipBlob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `TabularEditor_Scripts_${new Date().toISOString().slice(0, 10)}.zip`;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+                
+                document.getElementById('progress').style.display = 'none';
+                document.getElementById('generateBtn').disabled = false;
+                
+                showStatus(`ZIP file generated successfully with ${parsedScripts.length} scripts!`, 'success');
+                
+            } catch (error) {
+                document.getElementById('progress').style.display = 'none';
+                document.getElementById('generateBtn').disabled = false;
+                showStatus('Error generating ZIP: ' + error.message, 'error');
+                console.error('ZIP generation error:', error);
+            }
+        }
+    </script>
+</body>
+</html>
