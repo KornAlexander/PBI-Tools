@@ -209,7 +209,7 @@
         
         <div class="section">
             <h2>Step 1: Select ZIP File</h2>
-            <p>Choose a ZIP file containing Tabular Editor scripts (.csx files):</p>
+            <p>Choose a ZIP file containing Tabular Editor scripts (.csx or .cs files):</p>
             
             <div class="file-input-container" id="fileDropZone">
                 <label for="fileInput" class="file-input-label">
@@ -330,7 +330,7 @@
 
                 // Process each file in the ZIP
                 for (const [fileName, zipEntry] of Object.entries(zipContent.files)) {
-                    if (!zipEntry.dir && fileName.toLowerCase().endsWith('.csx')) {
+                    if (!zipEntry.dir && (fileName.toLowerCase().endsWith('.csx') || fileName.toLowerCase().endsWith('.cs'))) {
                         const content = await zipEntry.async('text');
                         const script = parseScriptFile(fileName, content);
                         
@@ -347,7 +347,7 @@
                 document.getElementById('progress').style.display = 'none';
 
                 if (scriptCount === 0) {
-                    showStatus('No .csx script files found in the ZIP file.', 'error');
+                    showStatus('No .csx or .cs script files found in the ZIP file.', 'error');
                     return;
                 }
 
@@ -422,8 +422,8 @@
 
         function filePathToScriptName(filePath) {
             // Convert file path back to script name format
-            // Remove .csx extension
-            let name = filePath.replace(/\.csx$/i, '');
+            // Remove .csx or .cs extension
+            let name = filePath.replace(/\.(csx|cs)$/i, '');
             
             // Convert forward slashes to single backslashes for Tabular Editor format
             name = name.replace(/\//g, '\\');
