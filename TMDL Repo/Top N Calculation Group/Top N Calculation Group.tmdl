@@ -1,0 +1,136 @@
+createOrReplace
+
+	/// ===== CONFIGURATION: the only object you need to edit =====
+	/// Lists the columns the Top N calculation group can rank. The first column that is on the visual axis wins,
+	/// so list the most detailed column first (Customer before Country). The last line is the default column,
+	/// used on cards, grand totals and visuals without a listed column.
+	/// A column NOT listed here is not ranked: its rows show the Top N of the default column instead.
+	/// Grand totals always use the default column, so with a Country > Customer hierarchy the total is the top N of the default column.
+	/// Requires compatibility level 1702 or higher (DAX user-defined functions).
+	/// Pattern credit: Martin Bubenheimer (Top 5 Kunden nach Umsatz, DIAD Foundation).
+	function 'Ranking.Apply' = ```
+			(
+			    mode : STRING,
+			    measureValue : SCALAR EXPR
+			) =>
+			VAR _N = SELECTEDVALUE ( 'Top N Count'[Top N Count], 5 )
+			RETURN
+			    SWITCH (
+			        TRUE (),
+			        // ----- rankable columns, most detailed first: ISINSCOPE ( <column> ), Ranking.Core ( mode, <column>, measureValue, _N ),
+			        ISINSCOPE ( 'Geography'[ZipCountry] ), Ranking.Core ( mode, 'Geography'[ZipCountry], measureValue, _N ),
+			        // ISINSCOPE ( 'Product'[Product] ), Ranking.Core ( mode, 'Product'[Product], measureValue, _N ),
+			        // ----- default column for cards and grand totals
+			        Ranking.Core ( mode, 'Geography'[ZipCountry], measureValue, _N )
+			    )
+			```
+
+	/// Top N engine for any column and any measure. No need to edit.
+	/// mode: "Top", "Bottom", "Others", "Share" or "Rank".
+	/// Ties: TOPN keeps all members tied at position N, so "Top 5" can show 6 or more members.
+	/// Pattern credit: Martin Bubenheimer (Top 5 Kunden nach Umsatz, DIAD Foundation).
+	function 'Ranking.Core' = ```
+			(
+			    mode : STRING,
+			    col : COLUMNREF,
+			    measureValue : SCALAR EXPR,
+			    n : INT64
+			) =>
+			-- Pattern: Martin Bubenheimer, "Top 5 Kunden nach Umsatz" (DIAD Foundation)
+			-- Generalized: any column via COLUMNREF, N from the 'Top N Count' slider
+			VAR _Members =
+			    CALCULATETABLE ( VALUES ( col ), ALLSELECTED ( col ) )
+			VAR _Top =
+			    TOPN ( n, _Members, CALCULATE ( measureValue ), DESC )
+			RETURN
+			    SWITCH (
+			        mode,
+			        "Top",
+			            CALCULATE ( measureValue, KEEPFILTERS ( _Top ) ),
+			        "Bottom",
+			            VAR _NonBlank = FILTER ( _Members, NOT ISBLANK ( CALCULATE ( measureValue ) ) )
+			            RETURN
+			                CALCULATE ( measureValue, KEEPFILTERS ( TOPN ( n, _NonBlank, CALCULATE ( measureValue ), ASC ) ) ),
+			        "Others",
+			            CALCULATE ( measureValue, KEEPFILTERS ( EXCEPT ( _Members, _Top ) ) ),
+			        "Share",
+			            IF (
+			                NOT ( ISINSCOPE ( col ) && ISBLANK ( measureValue ) ),
+			                DIVIDE ( CALCULATE ( measureValue, _Top ), CALCULATE ( measureValue, ALLSELECTED ( col ) ) )
+			            ),
+			        "Rank",
+			            IF (
+			                ISINSCOPE ( col ) && NOT ISBLANK ( measureValue ),
+			                RANKX ( ALLSELECTED ( col ), CALCULATE ( measureValue ), , DESC, SKIP )
+			            )
+			    )
+			```
+
+	/// Top N slider value for the 'Top N' calculation group. Default 5 when nothing or several values are selected.
+	/// Pattern credit: Martin Bubenheimer (Top 5 Kunden nach Umsatz, DIAD Foundation).
+	table 'Top N Count'
+
+		measure 'Top N Count Value' = SELECTEDVALUE ( 'Top N Count'[Top N Count], 5 )
+			formatString: 0
+
+		column 'Top N Count'
+			dataType: int64
+			formatString: 0
+			summarizeBy: none
+			sourceColumn: [Value]
+
+			extendedProperty ParameterMetadata =
+					{
+					  "version": 0
+					}
+
+		partition 'Top N Count' = calculated
+			mode: import
+			source = GENERATESERIES ( 1, 50, 1 )
+
+	/// Generic Top N calculation group: works with any measure and every column listed in function Ranking.Apply.
+	/// N comes from the 'Top N Count' slider (default 5).
+	/// Precedence must be unique per model: change 20 if another calculation group already uses it.
+	/// The model must have "Discourage implicit measures" = On (Model properties), otherwise the calculation group is rejected.
+	/// Pattern credit: Martin Bubenheimer (Top 5 Kunden nach Umsatz, DIAD Foundation).
+	table 'Top N'
+
+		calculationGroup
+			precedence: 20
+
+			/// Measure value only for the top N members of the ranked column inside the current selection. Total = sum of the top N.
+			calculationItem 'Top N' = Ranking.Apply ( "Top", SELECTEDMEASURE () )
+				ordinal: 0
+
+			/// Measure value only for the bottom N members that have a value (blanks are excluded before ranking).
+			calculationItem 'Bottom N' = Ranking.Apply ( "Bottom", SELECTEDMEASURE () )
+				ordinal: 1
+
+			/// Measure value for all members outside the top N. Total = "Others" amount for a card or a stacked total.
+			calculationItem 'Others' = Ranking.Apply ( "Others", SELECTEDMEASURE () )
+				ordinal: 2
+
+			/// Share of the top N in the selected total, for example "Top 5 customers = 92 % of sales". Same value on every row of the ranked column that has a value.
+			calculationItem 'Top N Share' = Ranking.Apply ( "Share", SELECTEDMEASURE () )
+				ordinal: 3
+
+				formatStringDefinition = "0.0 %"
+
+			/// Rank of the current member inside the selection (1 = highest, SKIP ties like TOPN). Blank on the total row.
+			calculationItem 'Rank' = Ranking.Apply ( "Rank", SELECTEDMEASURE () )
+				ordinal: 4
+
+				formatStringDefinition = "0"
+
+		column 'Top N'
+			dataType: string
+			summarizeBy: none
+			sourceColumn: Name
+			sortByColumn: Ordinal
+
+		column Ordinal
+			dataType: int64
+			isHidden
+			summarizeBy: none
+			sourceColumn: Ordinal
+
